@@ -1,0 +1,20 @@
+/** @jsx jsx */
+import { jsx } from '@emotion/core';
+
+import {
+  badgeStyle
+} from "./style";
+
+const badgecount = (props) => {
+
+  let count = "";
+
+  if(props.count) {
+    count = (
+      <span css={badgeStyle(props)} className="unread-count">{props.count}</span>
+    );
+  }
+  return count;
+}
+
+export default badgecount;
