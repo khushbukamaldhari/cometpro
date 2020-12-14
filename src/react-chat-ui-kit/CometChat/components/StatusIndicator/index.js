@@ -1,3 +1,5 @@
+import React from "react";
+
 /** @jsx jsx */
 import { jsx } from '@emotion/core';
 
@@ -20,9 +22,8 @@ const statusindicator = (props) => {
     const cornerRadius = props.cornerRadius || '50%';
   
     const getStyle = () => ({borderWidth:borderWidth, borderStyle:'solid',borderColor:borderColor ,'borderRadius': cornerRadius})
-
     return (
-        <span css={presenceStyle(props)} className="presence" style={getStyle()}></span>
+        <span css={presenceStyle(props)} style={getStyle()}></span>
     );
 }
 

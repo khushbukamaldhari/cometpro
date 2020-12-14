@@ -1,3 +1,5 @@
+import React from "react";
+
 /** @jsx jsx */
 import { jsx } from '@emotion/core'
 
@@ -19,17 +21,17 @@ const senderfilebubble = (props) => {
   const message = Object.assign({}, props.message, {messageFrom: "sender"});
 
   return (
-    <div css={messageContainerStyle()} className="sender__message__container message__file">
-      <ToolTip {...props} message={message} />
-      <div css={messageWrapperStyle()} className="message__wrapper">
-        <div css={messageFileWrapper(props)} className="message__file__wrapper">
+    <div css={messageContainerStyle()}>
+      <div css={messageWrapperStyle()}>
+        <ToolTip action="viewMessageThread" {...props} message={message} />
+        <div css={messageFileWrapper(props)}>
           <a href={props.message.data.attachments[0].url} target="_blank" rel="noopener noreferrer">{props.message.data.attachments[0].name} <img src={blueFile} alt="file"/></a>                      
         </div>
-      </div> 
-      <div css={messageInfoWrapperStyle()} className="message__info__wrapper">
-        <ReplyCount {...props} message={message} />
-        <ReadReciept {...props} />
-      </div>                           
+        <div css={messageInfoWrapperStyle()}>
+          <ReplyCount action="viewMessageThread" {...props} message={message} />
+          <ReadReciept {...props} />
+        </div>
+      </div>                            
     </div>
   )
 }

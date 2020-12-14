@@ -36,7 +36,7 @@ class CometChatUserList extends React.PureComponent {
   constructor(props) {
 
     super(props);
-
+    this.i = 0;
     this.state = {
       userlist: [],
       selectedUser: null
@@ -192,9 +192,15 @@ class CometChatUserList extends React.PureComponent {
           this.decoratorMessage = "No users found";
         }
         
-        userList.forEach(user => user = this.setAvatar(user));
+        userList.forEach(user => {
+          if( this.i == 0 ){
+            this.handleClick(user);
+            this.i = 1;
+          }  
+          user = this.setAvatar(user)
+         
+        });
         this.setState({ userlist: [...this.state.userlist, ...userList] });
-          
       }).catch((error) => {
 
         this.decoratorMessage = "Error";
@@ -229,11 +235,10 @@ class CometChatUserList extends React.PureComponent {
         </div>
       );
     }
-
     const userList = [...this.state.userlist];
     let currentLetter = "";
     const users = userList.map((user, key) => {
-      if( user.uid.startsWith( WP_API_CONSTANTS.WP_PREFIX ) ){
+      // if( user.uid.startsWith( WP_API_CONSTANTS.WP_PREFIX ) ){
         const chr = user.name[0].toUpperCase();
         let firstChar = null;
         if (chr !== currentLetter) {
@@ -254,9 +259,9 @@ class CometChatUserList extends React.PureComponent {
             clickeHandler={this.handleClick}  />
           </React.Fragment>
         );
-      }else{
+      // }else{
         
-      }
+      // }
       
 
     });

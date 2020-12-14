@@ -12,7 +12,7 @@ export class ConversationListManager {
     callListenerId = "chatlist_call_" + new Date().getTime();
 
     constructor() {
-        this.conversationRequest = new CometChat.ConversationsRequestBuilder().setConversationType("user").setLimit(30).build();
+        this.conversationRequest = new CometChat.ConversationsRequestBuilder().setLimit(50).build();
     }
 
     fetchNextConversation() {
@@ -74,12 +74,6 @@ export class ConversationListManager {
                 onCustomMessageReceived: customMessage => {
                     callback(enums.CUSTOM_MESSAGE_RECEIVED, null, customMessage);
                 },
-                onMessageDeleted: deletedMessage => {
-                    callback(enums.MESSAGE_DELETED, null, deletedMessage);
-                },
-                onMessageEdited: editedMessage => {
-                    callback(enums.MESSAGE_EDITED, null, editedMessage);
-                }
             })
         );
 

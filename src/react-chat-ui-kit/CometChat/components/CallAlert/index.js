@@ -9,7 +9,7 @@ import * as enums from '../../util/enums.js';
 
 import Avatar from "../Avatar";
 import { SvgAvatar } from '../../util/svgavatar';
-import { validateWidgetSettings } from "../../util/common";
+
 import { CallAlertManager } from "./controller";
 
 import {
@@ -38,22 +38,16 @@ class CallAlert extends React.PureComponent {
             incomingCall: null,
             callInProgress: null
         }
-
-        this.incomingAlert = new Audio(incomingCallAlert);
     }
 
     componentDidMount() {
+        this.incomingAlert = new Audio(incomingCallAlert);
 
         this.CallAlertManager = new CallAlertManager();
         this.CallAlertManager.attachListeners(this.callScreenUpdated);
     }
 
     playIncomingAlert = () => {
-
-        //if audio sound is disabled in chat widget
-        if (validateWidgetSettings(this.props.widgetsettings, "enable_sound_for_calls") === false) {
-            return false;
-        }
 
         this.incomingAlert.currentTime = 0;
         if (typeof this.incomingAlert.loop == 'boolean') {
@@ -65,16 +59,6 @@ class CallAlert extends React.PureComponent {
             }, false);
         }
         this.incomingAlert.play();
-    }
-
-    pauseIncomingAlert = () => {
-
-        //if audio sound is disabled in chat widget
-        if (validateWidgetSettings(this.props.widgetsettings, "enable_sound_for_calls") === false) {
-            return false;
-        }
-        
-        this.incomingAlert.pause();
     }
 
     callScreenUpdated = (key, call) => {
@@ -129,7 +113,7 @@ class CallAlert extends React.PureComponent {
     incomingCallCancelled = (call) => {
 
         //we are not marking this as read as it will done in messagelist component
-        this.pauseIncomingAlert();
+        this.incomingAlert.pause();
         this.setState({ incomingCall: null });
     }
 
@@ -145,7 +129,7 @@ class CallAlert extends React.PureComponent {
 
     rejectCall = () => {
 
-        this.pauseIncomingAlert();
+        this.incomingAlert.pause();
         CometChatManager.rejectCall(this.state.incomingCall.sessionId, CometChat.CALL_STATUS.REJECTED).then(rejectedCall => {
 
             this.props.actionGenerated("rejectedIncomingCall", this.state.incomingCall, rejectedCall);
@@ -159,14 +143,12 @@ class CallAlert extends React.PureComponent {
     }
 
     acceptCall = () => {
-        
         this.setState({ incomingCall: null, callInProgress: this.props.callInProgress });
-        this.pauseIncomingAlert();
+        this.incomingAlert.pause();
         this.props.actionGenerated("acceptIncomingCall", this.state.incomingCall);
     }
 
     render() {
-        
         let callScreen = null;
         if (this.state.incomingCall) {
             
@@ -184,24 +166,23 @@ class CallAlert extends React.PureComponent {
             }
             
             callScreen = (
-                <div css={incomingCallWrapperStyle(this.props, keyframes)} className="callalert__wrapper">
-                    <div css={callContainerStyle()} className="callalert__container">
-                        <div css={headerWrapperStyle()} className="callalert__header">
-                            <div css={callDetailStyle()} className="header__detail">
-                                <div css={nameStyle()} className="name">{this.state.incomingCall.sender.name}</div>
-                                <div css={callTypeStyle(this.props)} className="calltype">{callType}</div>
+                <div css={incomingCallWrapperStyle(this.props, keyframes)}>
+                    <div css={callContainerStyle()}>
+                        <div css={headerWrapperStyle()}>
+                            <div css={callDetailStyle()}>
+                                <div css={nameStyle()}>{this.state.incomingCall.sender.name}</div>
+                                <div css={callTypeStyle(this.props)}>{callType}</div>
                             </div>
-                            <div css={thumbnailStyle()} className="header__thumbnail"><Avatar cornerRadius="50%" image={this.state.incomingCall.sender.avatar} /></div>
+                            <div css={thumbnailStyle()}><Avatar cornerRadius="50%" image={this.state.incomingCall.sender.avatar} /></div>
                         </div>
-                        <div css={headerButtonStyle()} className="callalert__buttons">
-                            <button css={ButtonStyle(this.props, 0)} className="button button__decline" onClick={this.rejectCall}>Decline</button>
-                            <button css={ButtonStyle(this.props, 1)} className="button button__accept" onClick={this.acceptCall}>Accept</button>
+                        <div css={headerButtonStyle()}>
+                            <button css={ButtonStyle(this.props, 0)} onClick={this.rejectCall}>Decline</button>
+                            <button css={ButtonStyle(this.props, 1)} onClick={this.acceptCall}>Accept</button>
                         </div>
                     </div>
                 </div>
             );
         }
-        
         return callScreen;
     }
 }

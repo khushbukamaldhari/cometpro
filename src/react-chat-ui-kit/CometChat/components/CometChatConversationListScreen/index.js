@@ -15,7 +15,6 @@ import CometChatGroupDetail from "../CometChatGroupDetail";
 import MessageThread from "../MessageThread";
 import CallAlert from "../CallAlert";
 import CallScreen from "../CallScreen";
-import ImageView from "../ImageView";
 
 import { theme } from "../../resources/theme";
 
@@ -52,10 +51,7 @@ class CometChatConversationListScreen extends React.Component {
       outgoingCall: null,
       messageToMarkRead: {},
       callmessage: {},
-      sidebarview: false,
-      imageView: null,
-      groupmessage: {},
-      lastmessage: {}
+      sidebarview: false
     }
 
     this.theme = Object.assign({}, theme, this.props.theme);
@@ -135,7 +131,6 @@ class CometChatConversationListScreen extends React.Component {
       break;
       case "threadMessageComposed":
         this.onThreadMessageComposed(item);
-        this.updateLastMessage(item[0]);
       break;
       case "acceptIncomingCall":
         this.acceptIncomingCall(item);
@@ -155,30 +150,9 @@ class CometChatConversationListScreen extends React.Component {
       case "userLeftCall":
         this.appendCallMessage(item);
         break;
-      case "viewActualImage":
-        this.toggleImageView(item);
-        break;
-      case "membersAdded":
-        this.membersAdded(item);
-        break;
-      case "memberUnbanned":
-        this.memberUnbanned(item);
-        break;
-      case "memberScopeChanged":
-        this.memberScopeChanged(item);
-        break;
-      case "messageComposed":
-      case "messageEdited":
-      case "messageDeleted":
-        this.updateLastMessage(item[0]);
-        break;
       default:
       break;
     }
-  }
-
-  updateLastMessage = (message) => {
-    this.setState({ lastmessage: message });
   }
 
   blockUser = () => {
@@ -269,14 +243,10 @@ class CometChatConversationListScreen extends React.Component {
   }
 
   deleteGroup = (group) => {
-
-    this.toggleSideBar();
     this.setState({groupToDelete: group, item: {}, type: "group", viewdetailscreen: false});
   }
 
   leaveGroup = (group) => {
-
-    this.toggleSideBar();
     this.setState({groupToLeave: group, item: {}, type: "group", viewdetailscreen: false});
   }
 
@@ -400,66 +370,19 @@ class CometChatConversationListScreen extends React.Component {
     this.setState({ callmessage: call });
   }
 
-  toggleImageView = (message) => {
-    this.setState({ imageView: message });
-  }
-
-  membersAdded = (members) => {
-
-    const messageList = [];
-    members.forEach(eachMember => {
-
-      const message = `${this.loggedInUser.name} added ${eachMember.name}`;
-      const sentAt = new Date() / 1000 | 0;
-      const messageObj = { "category": "action", "message": message, "type": enums.ACTION_TYPE_GROUPMEMBER, "sentAt": sentAt };
-      messageList.push(messageObj);
-    });
-
-    this.setState({ groupmessage: messageList });
-  }
-
-  memberUnbanned = (members) => {
-
-    const messageList = [];
-    members.forEach(eachMember => {
-
-      const message = `${this.loggedInUser.name} unbanned ${eachMember.name}`;
-      const sentAt = new Date() / 1000 | 0;
-      const messageObj = { "category": "action", "message": message, "type": enums.ACTION_TYPE_GROUPMEMBER, "sentAt": sentAt };
-      messageList.push(messageObj);
-    });
-
-    this.setState({ groupmessage: messageList });
-  }
-
-  memberScopeChanged = (members) => {
-
-    const messageList = [];
-
-    members.forEach(eachMember => {
-
-      const message = `${this.loggedInUser.name} made ${eachMember.name} ${eachMember.scope}`;
-      const sentAt = new Date() / 1000 | 0;
-      const messageObj = { "category": "action", "message": message, "type": enums.ACTION_TYPE_GROUPMEMBER, "sentAt": sentAt };
-      messageList.push(messageObj);
-    });
-
-    this.setState({ groupmessage: messageList });
-  }
-
   render() {
 
     let threadMessageView = null;
     if(this.state.threadmessageview) {
       threadMessageView = (
-        <div css={chatScreenSecondaryStyle(this.theme)} className="chats__secondary-view">
+        <div css={chatScreenSecondaryStyle(this.theme)}>
           <MessageThread
           theme={this.theme}
           tab={this.state.tab}
           item={this.state.threadmessageitem}
           type={this.state.threadmessagetype}
           parentMessage={this.state.threadmessageparent}
-          loggedInUser={this.loggedInUser}
+          callmessage={this.state.callmessage}
           actionGenerated={this.actionHandler} />
         </div>
       );
@@ -471,7 +394,7 @@ class CometChatConversationListScreen extends React.Component {
       if(this.state.type === "user") {
 
         detailScreen = (
-          <div css={chatScreenSecondaryStyle(this.theme)} className="chats__secondary-view">
+          <div css={chatScreenSecondaryStyle(this.theme)}>
             <CometChatUserDetail
               theme={this.theme}
               item={this.state.item} 
@@ -482,7 +405,7 @@ class CometChatConversationListScreen extends React.Component {
       } else if (this.state.type === "group") {
 
         detailScreen = (
-          <div css={chatScreenSecondaryStyle(this.theme)} className="chats__secondary-view">
+          <div css={chatScreenSecondaryStyle(this.theme)}>
           <CometChatGroupDetail
             theme={this.theme}
             item={this.state.item} 
@@ -503,20 +426,14 @@ class CometChatConversationListScreen extends React.Component {
         type={this.state.type}
         composedthreadmessage={this.state.composedthreadmessage}
         callmessage={this.state.callmessage}
-        groupmessage={this.state.groupmessage}
         loggedInUser={this.loggedInUser}
         actionGenerated={this.actionHandler} />
       );
-    }
-
-    let imageView = null;
-    if (this.state.imageView) {
-      imageView = (<ImageView open={true} close={() => this.toggleImageView(null)} message={this.state.imageView} />);
-    }
+    } 
 
     return (
-      <div css={chatScreenStyle(this.theme)} className="cometchat cometchat--chats">
-        <div css={chatScreenSidebarStyle(this.state, this.theme)} className="chats__sidebar">
+      <div css={chatScreenStyle(this.theme)}>
+        <div css={chatScreenSidebarStyle(this.state, this.theme)}>
           <CometChatConversationList
           theme={this.theme}
           item={this.state.item}
@@ -526,11 +443,10 @@ class CometChatConversationListScreen extends React.Component {
           groupToUpdate={this.state.groupToUpdate}
           messageToMarkRead={this.state.messageToMarkRead}
           onItemClick={this.itemClicked}
-          lastMessage={this.state.lastmessage}
           actionGenerated={this.actionHandler}
           enableCloseMenu={Object.keys(this.state.item).length} />
         </div>
-        <div css={chatScreenMainStyle(this.state)} className="chats__main">{messageScreen}</div>
+        <div css={chatScreenMainStyle(this.state)}>{messageScreen}</div>
         {detailScreen}
         {threadMessageView}
         <CallAlert
@@ -542,9 +458,7 @@ class CometChatConversationListScreen extends React.Component {
         type={this.state.type}
         incomingCall={this.state.incomingCall}
         outgoingCall={this.state.outgoingCall}
-        loggedInUser={this.loggedInUser}
         actionGenerated={this.actionHandler} />
-        {imageView}
       </div>
     );
   }

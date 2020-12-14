@@ -7,48 +7,34 @@ export const messageContainerStyle = () => {
         paddingRight: "16px",
         maxWidth: "65%",
         clear: "both",
-        position: "relative",
-        display: "flex",
-        flexDirection: "column",
-        flexShrink: "0",
-        ":hover": {
-            "ul.message__actions": {
-                display: "flex"
-            }
-        }
     }
 }
 
 export const messageWrapperStyle = () => {
 
     return {
-        width: "auto",
         flex: "1 1",
-        alignSelf: "flex-end",
         display: "flex",
+        flexDirection: "column",
+        position: "relative",
+        width: "100%",
+        ':hover': {
+            'ul:first-of-type': {
+                display: "inline-flex"
+            }
+
+        }
     }
 }
 
-export const messageImgWrapper = (props) => {
-
-    const mq = [...props.theme.breakPoints];
+export const messageImgWrapper = () => {
 
     return {
         display: "inline-block",
+        borderRadius: "12px",
         alignSelf: "flex-end",
-        maxWidth: "300px",
-        height: "200px",
-        cursor: "pointer",
-        flexShrink: "0",
-        'img': {
-            borderRadius: "8px",
-            height: "100%",
-        },
-        [`@media ${mq[0]}`]: {
-            minWidth: "50px",
-            maxWidth: "150px",
-            height: "100px",
-            padding: "2px 2px",
+        ' > img': {
+            maxWidth: "250px"
         }
     }
 }

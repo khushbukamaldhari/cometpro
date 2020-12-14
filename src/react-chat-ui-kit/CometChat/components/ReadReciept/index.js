@@ -1,3 +1,5 @@
+import React from "react";
+
 /** @jsx jsx */
 import { jsx } from '@emotion/core'
 
@@ -28,7 +30,7 @@ const readreceipt = (props) => {
     const timestamp = new Date(props.message.sentAt * 1000).toLocaleTimeString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true });
 
     return (
-      <span css={msgTimestampStyle()} className="message__timestamp">{timestamp}{receipt}</span>
+      <span css={msgTimestampStyle()}>{timestamp}{receipt}</span>
     );
 }
 

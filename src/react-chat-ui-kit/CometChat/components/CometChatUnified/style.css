@@ -1,0 +1,21 @@
+.ccproNav-inner .ccproNav-block {
+    background:#f5f5f5;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.ccproNav-inner .ccproNav-block span:first-child {
+    margin-right: 10px;
+}
+
+.ccproNav-inner .ccproNav-block.active {
+    background: #4fbaa1;
+}
+.ccproNav-inner .ccproNav-block.active span{color:#fff;}
+
+.ccproNav-inner .ccproNav-block {
+    font-size: 13px;
+    font-weight: 600;
+}

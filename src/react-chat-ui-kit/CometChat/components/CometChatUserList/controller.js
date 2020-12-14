@@ -1,16 +1,17 @@
 import { CometChat } from "@cometchat-pro/chat";
+import { WP_API_CONSTANTS } from "../../../../consts";
 
 export class UserListManager {
 
     userRequest = null;
     userListenerId = "userlist_" + new Date().getTime();
-
+    
     constructor(friendsOnly, searchKey) {
-
+        let role = WP_API_CONSTANTS.WP_USER_ROLE;
         if (searchKey) {
-            this.usersRequest = new CometChat.UsersRequestBuilder().setLimit(100).friendsOnly(friendsOnly).setSearchKeyword(searchKey).build();
+            this.usersRequest = new CometChat.UsersRequestBuilder().setLimit(100).setRole(role).friendsOnly(friendsOnly).setSearchKeyword(searchKey).build();
         } else {
-            this.usersRequest = new CometChat.UsersRequestBuilder().setLimit(100).friendsOnly(friendsOnly).build();
+            this.usersRequest = new CometChat.UsersRequestBuilder().setLimit(100).setRole(role).friendsOnly(friendsOnly).build();
         }
     }
 

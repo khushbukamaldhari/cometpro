@@ -1,10 +1,10 @@
 export const presenceStyle = (props) => {
-
+// console.log(props);
     let presenceStatus = {
         backgroundColor: "rgb(85, 85, 85)"
     }
-
-    if (props.status === "online" || props.status === "available") {
+    // console.log(props.status);
+    if(props.status === "online" || props.status === "available") {
         presenceStatus = {
             backgroundColor: "rgb(0, 255, 0)"
         }

@@ -142,23 +142,6 @@ class SharedMediaView extends React.Component {
         this.setState({messagetype: type, messageList: []});
     }
 
-    lazyLoad = (target) => {
-        const obs = new IntersectionObserver((entries, observer) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    const img = entry.target.querySelector("img");
-                    const src = img.getAttribute('data-lazy');
-                    
-                    img.setAttribute('src', src);
-                    img.classList.add('fadeIn');
-
-                    observer.disconnect();
-                }
-            });
-        });
-        obs.observe(target);
-    }
-
     render() {
 
         const template = (message, key) => {
@@ -166,7 +149,7 @@ class SharedMediaView extends React.Component {
             if(this.state.messagetype === "image" && message.data.url) {
 
                 return (
-                    <div id={message.id} key={key} css={itemStyle(this.state, this.props, fileIcon)} className="item item__image">
+                    <div id={message.id} key={key} css={itemStyle(this.state, this.props, fileIcon)}>
                         <img src={message.data.url} alt="Media Item" />
                     </div>
                 );
@@ -174,7 +157,7 @@ class SharedMediaView extends React.Component {
             } else if (this.state.messagetype === "video" && message.data.url) {
 
                 return (
-                    <div id={message.id} key={key} css={itemStyle(this.state, this.props, fileIcon)} className="item item__video">
+                    <div id={message.id} key={key} css={itemStyle(this.state, this.props, fileIcon)}>
                         <video src={message.data.url} />
                     </div>
                 );
@@ -182,7 +165,7 @@ class SharedMediaView extends React.Component {
             } else if (this.state.messagetype === "file" && message.data.attachments) {
 
                 return (
-                    <div id={message.id} key={key} css={itemStyle(this.state, this.props, fileIcon)} className="item item__file">
+                    <div id={message.id} key={key} css={itemStyle(this.state, this.props, fileIcon)}>
                     <a href={message.data.attachments[0].url} 
                     target="_blank" 
                     rel="noopener noreferrer">{message.data.attachments[0].name}</a>
@@ -197,15 +180,15 @@ class SharedMediaView extends React.Component {
         });
 
         return (
-            <div css={sectionStyle(this.props)} className="section section__sharedmedia">
-                <h6 css={sectionHeaderStyle(this.props)} className="section__header">Shared Media</h6>
-                <div css={sectionContentStyle(this.props)} data-id="sharedmedia" className="section__content">
-                    <div css={mediaBtnStyle()} className="media__button">
+            <div css={sectionStyle(this.props)}>
+                <h6 css={sectionHeaderStyle(this.props)}>Shared Media</h6>
+                <div css={sectionContentStyle(this.props)} data-id="sharedmedia">
+                    <div css={mediaBtnStyle()}>
                         <span css={buttonStyle(this.state, "image")} onClick={() => this.mediaClickHandler("image")}>Photos</span>
                         <span css={buttonStyle(this.state, "video")} onClick={() => this.mediaClickHandler("video")}>Videos</span>
                         <span css={buttonStyle(this.state, "file")} onClick={() => this.mediaClickHandler("file")}>Docs</span>
                     </div>
-                    <div css={mediaItemStyle()} className="media_items" 
+                    <div css={mediaItemStyle()}
                     ref={el => this.messageContainer = el}
                     onScroll={this.handleScroll}>{(messageList.length) ? messageList : "No records found."}
                     </div>

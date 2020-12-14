@@ -11,56 +11,6 @@ export const chatComposerStyle = (props) => {
     }
 }
 
-export const editPreviewContainerStyle = (props, keyframes) => {
-
-    const slideAnimation = keyframes`
-    from {
-        bottom: -60px
-    }
-    to {
-        bottom: 0px
-    }`;
-
-    return {
-        padding: "7px",
-        backgroundColor: `${props.theme.backgroundColor.white}`,
-        borderColor: `${props.theme.borderColor.primary}`,
-        borderWidth: "1px 1px 1px 5px",
-        borderStyle: "solid",
-        color: `${props.theme.color.helpText}`,
-        fontSize: "13px",
-        animation: `${slideAnimation} 0.5s ease-out`,
-        position: "relative",
-    }
-}
-
-export const previewHeadingStyle = () => {
-
-    return {
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "space-between"
-    }
-}
-
-export const previewTextStyle = () => {
-
-    return {
-        padding: "5px 0",
-    }
-}
-
-export const previewCloseStyle = (img) => {
-
-    return {
-        width: "24px",
-        height: "24px",
-        borderRadius: "50%",
-        background: `url(${img}) center center no-repeat`,
-        cursor: "pointer",
-    }
-}
-
 export const composerInputStyle = () => {
 
     return {
@@ -132,7 +82,7 @@ export const inputStickyStyle = (props) => {
         borderTop: `1px solid ${props.theme.borderColor.primary}`,
         backgroundColor: `${props.theme.backgroundColor.grey}`,
         display: "flex",
-        justifyContent: "space-between",
+        justifyContent: "flex-end",
     }
 }
 
@@ -140,6 +90,7 @@ export const stickyAttachmentStyle = () => {
 
     return {
         display: "flex",
+        width: "calc(100% - 50px)",
     }
 }
 
@@ -153,6 +104,9 @@ export const attachmentIconStyle = (img) => {
             height: "20px",
             background: `url(${img}) center center no-repeat`,
             cursor: "pointer",
+            // 'img': {
+            //     display: "none", 
+            // }
         }
     }
 }
@@ -194,6 +148,7 @@ export const fileItemStyle = (props, img) => {
 
     const icon = {
         background: `url(${img}) no-repeat 100% 100%`,
+        // maskSize: "cover",
     }
 
     return {
@@ -212,49 +167,33 @@ export const stickyButtonStyle = () => {
 
     return {
         display: "flex",
+        flexDirection: "row",
         alignItems: "center",
         justifyContent: "space-between",
-        "div:not(:first-of-type)": {
-            marginLeft: "5px",
-        },
-        "div:not(:last-of-type)": {
-            marginRight: "5px"
-        }
     }
 }
 
 export const emojiButtonStyle = () => {
 
     return {
-        width: "20px",
-        height: "20px",
-        cursor: "pointer",
+        padding: "0 5px",
+        '> img': {
+            width: "20px",
+            height: "20px",
+            display: "inline-block",
+            cursor: "pointer",
+        }
     }
 }
 
 export const sendButtonStyle = () => {
 
     return {
-        width: "20px",
-        height: "20px",
-        cursor: "pointer",
-    }
-}
-
-export const reactionBtnStyle = () => {
-
-    return {
-        cursor: "pointer",
-        width: "20px",
-        height: "20px",
-    }
-}
-
-export const stickerBtnStyle = () => {
-
-    return {
-        cursor: "pointer",
-        width: "20px",
-        height: "20px",
+        '> img': {
+            width: "20px",
+            height: "18px",
+            display: "inline-block",
+            cursor: "pointer",
+        }
     }
 }

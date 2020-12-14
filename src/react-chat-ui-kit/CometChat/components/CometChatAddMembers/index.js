@@ -40,8 +40,7 @@ class CometChatAddMembers extends React.Component {
         super(props);
         this.state = {
             userlist: [],
-            membersToAdd: [],
-            filteredlist: []
+            membersToAdd: []
         }
     }
 
@@ -96,7 +95,7 @@ class CometChatAddMembers extends React.Component {
         this.timeout = setTimeout(() => {
 
         this.AddMembersManager = new AddMembersManager(this.friendsOnly, val);
-            this.setState({ userlist: [], membersToAdd: [], membersToRemove: [], filteredlist: [] }, () => this.getUsers())
+            this.setState({ userlist: [], membersToAdd: [], membersToRemove: [] }, () => this.getUsers())
         }, 500);
   
     }
@@ -105,25 +104,14 @@ class CometChatAddMembers extends React.Component {
   
         new CometChatManager().getLoggedInUser().then((user) => {
   
-            this.AddMembersManager.fetchNextUsers().then(userList => {
+            this.AddMembersManager.fetchNextUsers().then((userList) => {
 
-                userList.forEach(user => user = this.setAvatar(user));
-
-                const filteredUserList = userList.filter(user => {
-
-                    const found = this.context.memberlist.find(member => user.uid === member.uid);
-                    const foundbanned = this.context.bannedmemberlist.find(member => user.uid === member.uid);
-                    if (found || foundbanned) {
-                        return false;
-                    }
-                    return true;
-                });
-
-                if (filteredUserList.length === 0) {
+                if (userList.length === 0) {
                     this.decoratorMessage = "No users found";
                 }
-
-                this.setState({ userlist: [...this.state.userlist, ...userList], filteredlist: [...this.state.filteredlist, ...filteredUserList] });
+            
+                userList.forEach(user => user = this.setAvatar(user));
+                this.setState({ userlist: [...this.state.userlist, ...userList] });
                 
             }).catch((error) => {
 
@@ -213,20 +201,31 @@ class CometChatAddMembers extends React.Component {
 
     render() {
 
-        const group = this.context;
-
         let messageContainer = null;
-        if (this.state.filteredlist.length === 0) {
 
+        if (this.state.userlist.length === 0) {
             messageContainer = (
-                <caption css={contactMsgStyle()} className="members__decorator-message">
-                    <p css={contactMsgTxtStyle(this.props)} className="decorator-message">{this.decoratorMessage}</p>
+                <caption css={contactMsgStyle()}>
+                    <p css={contactMsgTxtStyle(this.props)}>{this.decoratorMessage}</p>
                 </caption>
             );
         }
 
+        const group = this.context;
+
+        const userList = [...this.state.userlist];
+
+        const filteredUserList = userList.filter(user => {
+
+            const found = group.memberlist.find(member => user.uid === member.uid);
+            const foundbanned = group.bannedmemberlist.find(member => user.uid === member.uid);
+            if(found || foundbanned) {
+                return false;
+            }
+            return true;
+        });
+
         let currentLetter = "";
-        const filteredUserList = [...this.state.filteredlist];
         const users = filteredUserList.map((user, key) => {
 
             const chr = user.name[0].toUpperCase();
@@ -253,17 +252,16 @@ class CometChatAddMembers extends React.Component {
         return (
             <React.Fragment>
                 <Backdrop show={this.props.open} clicked={this.props.close} />
-                <div css={modalWrapperStyle(this.props)} className="modal__addmembers">
-                    <span css={modalCloseStyle(clearIcon)} className="modal__close" onClick={this.props.close} title="Close"></span>
-                    <div css={modalBodyCtyle()} className="modal__body">
+                <div css={modalWrapperStyle(this.props)}>
+                    <span css={modalCloseStyle(clearIcon)} onClick={this.props.close} title="Close"></span>
+                    <div css={modalBodyCtyle()}>
                         <table css={modalTableStyle()}>
-                            <caption css={tableCaptionStyle()} className="modal__title">Contacts</caption>
-                            <caption css={tableSearchStyle()} className="modal__search">
+                            <caption css={tableCaptionStyle()}>Contacts</caption>
+                            <caption css={tableSearchStyle()}>
                                 <input
                                 type="text" 
                                 autoComplete="off" 
                                 css={searchInputStyle(this.props, searchIcon)}
-                                className="search__input" 
                                 placeholder="Search"
                                 onChange={this.searchUsers} />
                             </caption>
@@ -271,7 +269,7 @@ class CometChatAddMembers extends React.Component {
                             <tbody css={tableBodyStyle(this.props)} onScroll={this.handleScroll}>{users}</tbody>
                             <tfoot css={tableFootStyle(this.props)}>
                                 <tr>
-                                    <td colSpan="2" className="addmembers"><button onClick={this.updateMembers}>Add</button></td>
+                                    <td colSpan="2"><button onClick={this.updateMembers}>Add</button></td>
                                 </tr>
                             </tfoot>
                         </table>

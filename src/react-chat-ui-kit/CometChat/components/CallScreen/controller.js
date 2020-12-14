@@ -12,6 +12,7 @@ export class CallScreenManager {
       this.callListenerId,
       new CometChat.CallListener({
         onOutgoingCallAccepted: call => {
+          console.log("dgfds");
           callback(enums.OUTGOING_CALL_ACCEPTED, call);
         },
         onOutgoingCallRejected: call => {

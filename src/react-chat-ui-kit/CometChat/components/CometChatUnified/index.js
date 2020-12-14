@@ -12,10 +12,11 @@ import NavBar from "./NavBar";
 import CometChatMessageListScreen from "../CometChatMessageListScreen";
 import CometChatUserDetail from "../CometChatUserDetail";
 import CometChatGroupDetail from "../CometChatGroupDetail";
+import CometChatUserMessageDetail from "../CometChatUserMessageDetail";
+import CometChatGroupMessageDetail from "../CometChatGroupMessageDetail";
 import MessageThread from "../MessageThread";
 import CallAlert from "../CallAlert";
 import CallScreen from "../CallScreen";
-import ImageView from "../ImageView";
 
 import { theme } from "../../resources/theme";
 
@@ -23,8 +24,12 @@ import {
   unifiedStyle,
   unifiedSidebarStyle,
   unifiedMainStyle,
-  unifiedSecondaryStyle
+  unifiedSecondaryStyle,
+  unifiedWPMainStyle
 } from "./style";
+import axios from 'axios';
+import { convertNodeToElement } from "react-html-parser";
+import { COMETCHAT_CONSTANTS, COMETCHAT_VARS, WP_API_CONSTANTS, WP_API_ENDPOINTS_CONSTANTS } from '../../../../consts';
 
 class CometChatUnified extends React.Component {
 
@@ -37,9 +42,12 @@ class CometChatUnified extends React.Component {
     this.state = {
       darktheme: false,
       viewdetailscreen: false,
+      viewMessagedetailscreen: false,
       item: {},
       type: "user",
-      tab: "conversations",
+      tab: "rooms",
+      roomUpdating: false,
+      callStatus:true,
       groupToDelete: {},
       groupToLeave: {},
       groupToUpdate: {},
@@ -52,17 +60,36 @@ class CometChatUnified extends React.Component {
       outgoingCall: null,
       messageToMarkRead: {},
       callmessage: {},
+      lastmessage: {},
       sidebarview: false,
-      imageView: null,
-      groupmessage: {},
-      lastmessage: {}
+      isRoomShow: true
     }
 
     this.theme = Object.assign({}, theme, this.props.theme);
 	}
   
-  componentDidMount() {
+   componentDidMount() {
+    if( COMETCHAT_CONSTANTS.MODE == COMETCHAT_VARS.CHAT_MODE_NBR ) {
+      if( WP_API_CONSTANTS.ENABLE_ROOM == "" ){
+        this.setState({ tab: 'contacts', type: 'user', isRoomShow: false });
+      }else{
 
+      }
+    //  this.getrooms();
+    }else{
+      let groupItem =   {
+        "table_name": WP_API_CONSTANTS.WP_TABLE_NAME,
+        "name": WP_API_CONSTANTS.WP_TABLE_NAME,
+        "membersCount": WP_API_CONSTANTS.WP_TABLE_USERS.length,
+        'scope': CometChat.GROUP_MEMBER_SCOPE.PARTICIPANT,
+        "guid": WP_API_CONSTANTS.WP_TABLE_ID,
+        "table_id": WP_API_CONSTANTS.WP_TABLE_ID,
+        "table_users": WP_API_CONSTANTS.WP_TABLE_USERS,
+      };
+      this.setState({ type: "group", item: groupItem});
+      
+    }
+    const activeCall = CometChat.getActiveCall();
     if(!Object.keys(this.state.item).length) {
       this.toggleSideBar();
     }
@@ -72,9 +99,26 @@ class CometChatUnified extends React.Component {
 
     }).catch((error) => {
       console.log("[CometChatUnified] getLoggedInUser error", error);
-      
     });
-    
+  }
+
+  getrooms = () => {
+    // setTimeout(() => {
+    if( this.state.tab  == 'rooms' ){
+      let api_url = `${WP_API_CONSTANTS.WP_API_URL}${WP_API_ENDPOINTS_CONSTANTS.GET_CHATROOM}`;
+      axios.get( api_url, {
+        params: {
+          user_id: WP_API_CONSTANTS.WP_USER_ID
+        }
+      }).then(roomList => {
+        if( roomList.data.length == 0 ){
+            this.setState({ tab: 'contacts', type: 'user', isRoomShow: false });
+        }else{
+          
+        }
+      });
+    }
+  // }, 1000); 
   }
 
   changeTheme = (e) => {
@@ -84,7 +128,6 @@ class CometChatUnified extends React.Component {
   }
 
   navBarAction = (action, type, item) => {
-    
     switch(action) {
       case "itemClicked":
         this.itemClicked(item, type);
@@ -101,9 +144,17 @@ class CometChatUnified extends React.Component {
   }
   
   itemClicked = (item, type) => {
-
-    this.toggleSideBar();
-    this.setState({ item: {...item}, type, viewdetailscreen: false });
+    // console.log(item);
+    if( type.roomUpdated == true ){
+      this.setState({ item: {...item}, type: type.type, viewdetailscreen: false, roomUpdating: type.roomUpdated });
+      this.toggleSideBar();
+      this.setState({ item: {...item}, type: type.type, viewdetailscreen: false });
+    }else{
+      this.setState({ item: {...item}, type, viewdetailscreen: false });
+      this.toggleSideBar();
+      this.setState({ item: {...item}, type, viewdetailscreen: false });
+    }
+    
   }
 
   tabChanged = (tab) => {
@@ -127,13 +178,22 @@ class CometChatUnified extends React.Component {
       case "videoCall":
         this.videoCall();
       break;
+      case "joinAudioCall":
+        this.joinAudioCall(item);
+      break;
+      case "joinVideoCall":
+        this.joinVideoCall(item);
+      break;
       case "viewDetail":
       case "closeDetailClicked":
         this.toggleDetailView();
       break;
+      case "viewMessageDetail":
+      case "closeMessageDetailClicked":
+        this.toggleMessageDetailView();
+      break;
       // eslint-disable-next-line no-lone-blocks
       case "menuClicked": {
-        
         this.toggleSideBar();
         this.setState({ item: {} });
       }
@@ -158,7 +218,6 @@ class CometChatUnified extends React.Component {
       break;
       case "threadMessageComposed":
         this.onThreadMessageComposed(item);
-        this.updateLastMessage(item[0]);
         break;
       case "acceptIncomingCall":
         this.acceptIncomingCall(item);
@@ -170,40 +229,27 @@ class CometChatUnified extends React.Component {
         this.rejectedIncomingCall(item, count);
         break;
       case "outgoingCallRejected":
-        this.setState({ outgoingCall: null, incomingCall: null });
+        this.setState({ outgoingCall: null, incomingCall: null, viewMessagedetailscreen: false });
         break;
       case "outgoingCallCancelled":
       case "callEnded":
-        this.outgoingCallEnded(item);
+        this.outgoingCallEnded(item, ...otherProps);
         break;
       case "userJoinedCall":
       case "userLeftCall":
         this.appendCallMessage(item);
-      break; 
-      case "viewActualImage":
-        this.toggleImageView(item);
-      break;
-      case "membersAdded": 
-        this.membersAdded(item);
-      break;
-      case "memberUnbanned":
-        this.memberUnbanned(item);
-      break;
-      case "memberScopeChanged":
-        this.memberScopeChanged(item);
-      break;
+        break;
+      case "itemClicked":
+          this.itemClicked(item, ...otherProps);
+        break;
       case "messageComposed": 
       case "messageEdited":
       case "messageDeleted":
-        this.updateLastMessage(item[0]);
-      break;
-      default:
-      break;
+          this.updateLastMessage(item[0]);
+        break;
+        default:
+        break;
     }
-  }
-
-  updateLastMessage = (message) => {
-    this.setState({ lastmessage: message });
   }
 
   blockUser = () => {
@@ -231,7 +277,7 @@ class CometChatUnified extends React.Component {
   }
 
   audioCall = () => {
-
+    // console.log(this.state.type);
     let receiverId, receiverType;
     if(this.state.type === "user") {
 
@@ -257,7 +303,7 @@ class CometChatUnified extends React.Component {
   }
 
   videoCall = () => {
-
+    // console.log(this.state.item);
     let receiverId, receiverType;
     if(this.state.type === "user") {
 
@@ -265,7 +311,7 @@ class CometChatUnified extends React.Component {
       receiverType = CometChat.RECEIVER_TYPE.USER;
 
     } else if(this.state.type === "group") {
-      receiverId = this.state.item.guid;
+      receiverId = this.state.item.table_id;
       receiverType = CometChat.RECEIVER_TYPE.GROUP;
     }
    
@@ -275,20 +321,127 @@ class CometChatUnified extends React.Component {
       this.setState({ outgoingCall: outgoingCall });
 
     }).catch(error => {
-
-      console.log("Call initialization failed with exception:", error);
+      console.log("", error);
     });
 
   }
 
-  toggleDetailView = () => {
+  joinVideoCall = (call1) => {
+    // alert("asfdasfd");
+    let api_url = `${WP_API_CONSTANTS.WP_API_URL}${WP_API_ENDPOINTS_CONSTANTS.POST_CHECKCALL}`;
+    // id.split(" ");
+    // console.log(this.state.item);
+    axios.post( api_url , {
+      user_id: WP_API_CONSTANTS.WP_USER_ID,
+      guid: this.state.item.guid,
+      ccpro_id: WP_API_CONSTANTS.CCPRO_USER_ID,
+      }
+  ).then(res => {
+      const call = res.data.data;
+      if( res.data.msg == "Call json not found!" ){
+        this.setState({ outgoingCall: null, incomingCall: null, viewMessagedetailscreen: false, callStatus: true });
+        // this.appendCallMessage(message);
+        alert("Call ended");
+      }else if( !call ){
+        // alert("asfdasfd");
+        this.setState({ incomingCall: call });
+      }else{
+        let api_status_url = `${WP_API_CONSTANTS.WP_API_URL}${WP_API_ENDPOINTS_CONSTANTS.POST_CHECKSTATUSCALL}`;
+        axios.post( api_status_url , {
+            user_id: WP_API_CONSTANTS.WP_USER_ID,
+            guid: this.state.item.guid,
+            ccpro_id: WP_API_CONSTANTS.CCPRO_USER_ID,
+            session_call_id: call.sessionId
+        }).then(status_res => {
+          const status_call = status_res.data;
+          if( status_res.data.success == false ){
+            let api_endcall_url = `${WP_API_CONSTANTS.WP_API_URL}${WP_API_ENDPOINTS_CONSTANTS.POST_ENDCALL}`;
+              axios.post( api_endcall_url , {
+                  user_id: WP_API_CONSTANTS.WP_USER_ID,
+                  guid: this.state.item.guid,
+                  ccpro_id: WP_API_CONSTANTS.CCPRO_USER_ID,
+              }).then(end_res => {
+              });
+          }else{
+            this.setState({ incomingCall: call });
 
+            const type = this.state.incomingCall.receiverType;
+            const id = (type === "user") ? this.state.incomingCall.sender.uid : this.state.incomingCall.receiverId;
+            const globalStateContext = React.createContext(call);
+            CometChat.getConversation(id, type).then(conversation => {
+              this.itemClicked(conversation.conversationWith, type);
+            }).catch(error => {
+              console.log('error while fetching a conversation', error);
+            });
+          }
+          
+        });
+      }
+      
+    });
+  }
+
+  joinAudioCall = (call1) => {
+    let api_url = `${WP_API_CONSTANTS.WP_API_URL}${WP_API_ENDPOINTS_CONSTANTS.POST_CHECKCALL}`;
+    // id.split(" ");
+    axios.post( api_url , {
+      user_id: WP_API_CONSTANTS.WP_USER_ID,
+      guid: this.state.item.guid,
+      ccpro_id: WP_API_CONSTANTS.CCPRO_USER_ID,
+      }
+  ).then(res => {
+      const call = res.data.data;
+      if( !call ){
+        this.setState({ incomingCall: call });
+      }else{
+        let api_status_url = `${WP_API_CONSTANTS.WP_API_URL}${WP_API_ENDPOINTS_CONSTANTS.POST_CHECKSTATUSCALL}`;
+        axios.post( api_status_url , {
+            user_id: WP_API_CONSTANTS.WP_USER_ID,
+            guid: this.state.item.guid,
+            ccpro_id: WP_API_CONSTANTS.CCPRO_USER_ID,
+            session_call_id: call.sessionId
+        }).then(status_res => {
+          const status_call = status_res.data;
+          if( status_res.data.succeaa == false ){
+            let api_endcall_url = `${WP_API_CONSTANTS.WP_API_URL}${WP_API_ENDPOINTS_CONSTANTS.POST_ENDCALL}`;
+              axios.post( api_endcall_url , {
+                  user_id: WP_API_CONSTANTS.WP_USER_ID,
+                  guid: this.state.item.guid,
+                  ccpro_id: WP_API_CONSTANTS.CCPRO_USER_ID,
+              }).then(end_res => {
+              });
+          }else{
+            this.setState({ incomingCall: call });
+
+            const type = this.state.incomingCall.receiverType;
+            const id = (type === "user") ? this.state.incomingCall.sender.uid : this.state.incomingCall.receiverId;
+            const globalStateContext = React.createContext(call);
+            CometChat.getConversation(id, type).then(conversation => {
+              this.itemClicked(conversation.conversationWith, type);
+            }).catch(error => {
+              console.log('error while fetching a conversation', error);
+            });
+          }
+          
+        });
+      }
+      
+    });
+    
+  }
+
+
+  toggleDetailView = () => {
     let viewdetail = !this.state.viewdetailscreen;
     this.setState({viewdetailscreen: viewdetail,  threadmessageview: false});
   }
 
-  toggleSideBar = () => {
+  toggleMessageDetailView = () => {
+    let viewmessagedetail = !this.state.viewMessagedetailscreen;
+    this.setState({viewMessagedetailscreen: viewmessagedetail,  threadmessageview: false});
+  }
 
+  toggleSideBar = () => {
     const sidebarview = this.state.sidebarview;
     this.setState({ sidebarview: !sidebarview });
   }
@@ -321,31 +474,25 @@ class CometChatUnified extends React.Component {
       return false;
     }
 
-    const message = { ...composedMessage };
+    const message = {...composedMessage};
     this.setState({composedthreadmessage: message});
   }
 
   deleteGroup = (group) => {
-
-    this.toggleSideBar();
     this.setState({groupToDelete: group, item: {}, type: "group", viewdetailscreen: false});
   }
 
   leaveGroup = (group) => {
-
-    this.toggleSideBar();
     this.setState({groupToLeave: group, item: {}, type: "group", viewdetailscreen: false});
   }
 
   updateMembersCount = (item, count) => {
 
-    //console.log("updateMembersCount item", item);
     const group = Object.assign({}, this.state.item, {membersCount: count});
     this.setState({item: group, groupToUpdate: group});
   }
 
   groupUpdated = (message, key, group, options) => {
-    
     switch(key) {
       case enums.GROUP_MEMBER_BANNED:
       case enums.GROUP_MEMBER_KICKED: {
@@ -369,19 +516,32 @@ class CometChatUnified extends React.Component {
     }
   }
 
+
   acceptIncomingCall = (call) => {
-
+    // console.log(this.props.item);
     this.setState({ incomingCall: call });
-
+    // console.log("call accept");
     const type = call.receiverType;
     const id = (type === "user") ? call.sender.uid : call.receiverId;
-
     CometChat.getConversation(id, type).then(conversation => {
-
-      this.itemClicked(conversation.conversationWith, type);
-
+      let api_url = `${WP_API_CONSTANTS.WP_API_URL}${WP_API_ENDPOINTS_CONSTANTS.POST_STARTCALL}`;
+      if( type === "group" ){
+        const user = {
+          user_id: WP_API_CONSTANTS.WP_USER_ID,
+          guid: call.receiverId,
+          ccpro_id: WP_API_CONSTANTS.CCPRO_USER_ID,
+          json_data: call
+        };
+        axios.post( api_url , user ).then(res => {
+          // console.log(res);
+          // console.log(conversation.conversationWith);
+          this.itemClicked(conversation.conversationWith, type);
+        });
+      }else{
+        // console.log(conversation.conversationWith);
+        this.itemClicked(conversation.conversationWith, type);
+      }  
     }).catch(error => {
-
       console.log('error while fetching a conversation', error);
     });
 
@@ -417,89 +577,148 @@ class CometChatUnified extends React.Component {
     }
   }
 
-  outgoingCallEnded = (message) => {
-
-    this.setState({ outgoingCall: null, incomingCall: null });
+  outgoingCallEnded = (message, callStatus) => {
+    this.setState({ outgoingCall: null, incomingCall: null, viewMessagedetailscreen: false, callStatus: callStatus });
     this.appendCallMessage(message);
   }
 
   appendCallMessage = (call) => {
     this.setState({ callmessage: call });
   }
-
-  membersAdded = (members) => {
-
-    const messageList = [];
-    members.forEach(eachMember => {
-
-      const message = `${this.loggedInUser.name} added ${eachMember.name}`;
-      const sentAt = new Date() / 1000 | 0;
-      const messageObj = { "category": "action", "message": message, "type": enums.ACTION_TYPE_GROUPMEMBER, "sentAt": sentAt };
-      messageList.push(messageObj);
-    });
-    
-    this.setState({ groupmessage: messageList });
-  }
-
-  memberUnbanned = (members) => {
-
-    const messageList = [];
-    members.forEach(eachMember => {
-
-      const message = `${this.loggedInUser.name} unbanned ${eachMember.name}`;
-      const sentAt = new Date() / 1000 | 0;
-      const messageObj = { "category": "action", "message": message, "type": enums.ACTION_TYPE_GROUPMEMBER, "sentAt": sentAt };
-      messageList.push(messageObj);
-    });
-
-    this.setState({ groupmessage: messageList });
-  }
-
-  memberScopeChanged = (members) => {
-
-    const messageList = [];
-
-    members.forEach(eachMember => {
-
-      const message = `${this.loggedInUser.name} made ${eachMember.name} ${eachMember.scope}`;
-      const sentAt = new Date() / 1000 | 0;
-      const messageObj = { "category": "action", "message": message, "type": enums.ACTION_TYPE_GROUPMEMBER, "sentAt": sentAt };
-      messageList.push(messageObj);
-    });
-
-    this.setState({ groupmessage: messageList });
-  }
-
-  toggleImageView = (message) => {
-    this.setState({ imageView: message });
-  }
   
-  render() {
+  updateLastMessage = (message) => {
+    this.setState({ lastmessage: message });
+  }
 
+  render() {
+    let messageScreen = null;
+    let navScreen = null;
+    if( COMETCHAT_CONSTANTS.MODE == COMETCHAT_VARS.CHAT_MODE_NBR ) {
+      
+      // console.log(this.state.item);
+      // if( this.state.tab === "rooms" && this.state.item == '' && this.props.state.length == "undefined" ){
+      //   this.setState({ tab: 'user', type: 'user', isRoomShow: false });
+      // }
+      navScreen = (
+        <div css={unifiedSidebarStyle(this.state, this.theme)}>
+          <NavBar 
+          theme={this.theme}
+          type={this.state.type}
+          item={this.state.item}
+          tab={this.state.tab}
+          isRoomShow={this.state.isRoomShow}
+          roomUpdate={this.state.roomUpdating}
+          groupToDelete={this.state.groupToDelete}
+          lastMessage={this.state.lastmessage}
+          groupToLeave={this.state.groupToLeave}
+          groupToUpdate={this.state.groupToUpdate}
+          messageToMarkRead={this.state.messageToMarkRead}
+          actionGenerated={this.navBarAction}
+          enableCloseMenu={Object.keys(this.state.item).length} />
+        </div>
+      );
+    }else{
+      
+    }
+    if(Object.keys(this.state.item).length) {
+      if( COMETCHAT_CONSTANTS.MODE == COMETCHAT_VARS.CHAT_MODE_NBR ) {
+        messageScreen = (
+          <div css={unifiedMainStyle(this.state)}>
+            <CometChatMessageListScreen 
+            theme={this.theme}
+            item={this.state.item} 
+            tab={this.state.tab}
+            type={this.state.type}
+            callStatus={this.state.callStatus}
+            composedthreadmessage={this.state.composedthreadmessage}
+            callmessage={this.state.callmessage}
+            loggedInUser={this.loggedInUser}
+            actionGenerated={this.actionHandler} />
+          </div>
+        );
+       
+      }else{
+        messageScreen = (
+          <div css={unifiedWPMainStyle(this.state)}>
+            <CometChatMessageListScreen 
+            theme={this.theme}
+            item={this.state.item} 
+            tab={this.state.tab}
+            type={this.state.type}
+            callStatus={this.state.callStatus}
+            composedthreadmessage={this.state.composedthreadmessage}
+            callmessage={this.state.callmessage}
+            loggedInUser={this.loggedInUser}
+            actionGenerated={this.actionHandler} />
+          </div>
+        );
+      }
+      
+    }
+    
     let threadMessageView = null;
     if(this.state.threadmessageview) {
       threadMessageView = (
-        <div css={unifiedSecondaryStyle(this.theme)} className="unified__secondary-view">
+        <div css={unifiedSecondaryStyle(this.theme)}>
           <MessageThread
           theme={this.theme}
           tab={this.state.tab}
           item={this.state.threadmessageitem}
           type={this.state.threadmessagetype}
           parentMessage={this.state.threadmessageparent}
-          loggedInUser={this.loggedInUser}
           actionGenerated={this.actionHandler} />
         </div>
       );
     }
-
     let detailScreen = null;
     if(this.state.viewdetailscreen) {
 
       if(this.state.type === "user") {
 
         detailScreen = (
-          <div css={unifiedSecondaryStyle(this.theme)} className="unified__secondary-view">
+          <div css={unifiedSecondaryStyle(this.theme)}>
             <CometChatUserDetail
+              theme={this.theme}
+              item={this.state.item} 
+              type={this.state.type}
+              actionGenerated={this.actionHandler} />
+          </div>
+          );
+      } else if (this.state.type === "group") {
+        if( COMETCHAT_CONSTANTS.MODE ==  COMETCHAT_VARS.CHAT_MODE_NBR ) {
+          detailScreen = (
+            <div css={unifiedSecondaryStyle(this.theme)}>
+              <CometChatGroupDetail
+                theme={this.theme}
+                item={this.state.item} 
+                type={this.state.type}
+                actionGenerated={this.actionHandler} />
+            </div>
+          );
+        }else{
+          detailScreen = (
+            <div css={unifiedSecondaryStyle(this.theme)}>
+              <CometChatGroupDetail
+                theme={this.theme}
+                item={this.state.item} 
+                type={this.state.type}
+                actionGenerated={this.actionHandler} />
+            </div>
+          );
+        }
+
+        
+      }
+    }
+    // console.log(this.state.composedthreadmessage);
+    let detailMessageScreen = null;
+    if(this.state.viewMessagedetailscreen) {
+      
+      if(this.state.type === "user") {
+
+        detailMessageScreen = (
+          <div css={unifiedSecondaryStyle(this.theme)}>
+            <CometChatUserMessageDetail
               theme={this.theme}
               item={this.state.item} 
               type={this.state.type}
@@ -508,71 +727,42 @@ class CometChatUnified extends React.Component {
           );
 
       } else if (this.state.type === "group") {
-
-        detailScreen = (
-          <div css={unifiedSecondaryStyle(this.theme)} className="unified__secondary-view">
-          <CometChatGroupDetail
-            theme={this.theme}
-            item={this.state.item} 
-            type={this.state.type}
-            actionGenerated={this.actionHandler} />
+        detailMessageScreen = (
+          <div css={unifiedSecondaryStyle(this.theme)}>
+            <CometChatGroupMessageDetail
+              theme={this.theme}
+              item={this.state.item} 
+              tab={this.state.tab}
+              type={this.state.type}
+              composedthreadmessage={this.state.composedthreadmessage}
+              callmessage={this.state.callmessage}
+              loggedInUser={this.loggedInUser}
+              actionGenerated={this.actionHandler} />
           </div>
         );
       }
     }
-    
-    let messageScreen = null;
-    if(Object.keys(this.state.item).length) {
-      messageScreen = (
-        <CometChatMessageListScreen 
-        theme={this.theme}
-        item={this.state.item} 
-        tab={this.state.tab}
-        type={this.state.type}
-        composedthreadmessage={this.state.composedthreadmessage}
-        callmessage={this.state.callmessage}
-        groupmessage={this.state.groupmessage}
-        loggedInUser={this.loggedInUser}
-        actionGenerated={this.actionHandler} />
-      );
-    }
-
-    let imageView = null;
-    if (this.state.imageView) {
-      imageView = (<ImageView open={true} close={() => this.toggleImageView(null)} message={this.state.imageView} />);
-    }
-    
+    // console.log(this.state.callmessage);
     return (
-      <div css={unifiedStyle(this.theme)} className="cometchat cometchat--unified">
-        <div css={unifiedSidebarStyle(this.state, this.theme)} className="unified__sidebar">
-          <NavBar 
-          theme={this.theme}
-          type={this.state.type}
-          item={this.state.item}
-          tab={this.state.tab}
-          groupToDelete={this.state.groupToDelete}
-          groupToLeave={this.state.groupToLeave}
-          groupToUpdate={this.state.groupToUpdate}
-          messageToMarkRead={this.state.messageToMarkRead}
-          lastMessage={this.state.lastmessage}
-          actionGenerated={this.navBarAction}
-          enableCloseMenu={Object.keys(this.state.item).length} />
-        </div>
-        <div css={unifiedMainStyle(this.state)} className="unified__main">{messageScreen}</div>
+      <div css={unifiedStyle(this.theme)}>
+        {navScreen}
+        {messageScreen}
         {detailScreen}
+        {detailMessageScreen}
         {threadMessageView}
         <CallAlert 
+        item={this.state.item} 
         theme={this.theme} 
         actionGenerated={this.actionHandler}  />
+        
         <CallScreen
         theme={this.theme}
         item={this.state.item} 
         type={this.state.type}
         incomingCall={this.state.incomingCall}
         outgoingCall={this.state.outgoingCall}
-        loggedInUser={this.loggedInUser}
         actionGenerated={this.actionHandler} />
-        {imageView}
+
       </div>
     );
   }

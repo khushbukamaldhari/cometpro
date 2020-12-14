@@ -1,3 +1,5 @@
+import React from "react";
+
 /** @jsx jsx */
 import { jsx } from '@emotion/core';
 
@@ -9,7 +11,7 @@ import { iconWrapperStyle } from "../CometChatCreatePoll/style";
 const createpollview = (props) => {
 
     return (
-        <tr className="poll__options">
+        <tr>
             <td>&nbsp;</td>
             <td>
                 <input 
@@ -20,9 +22,7 @@ const createpollview = (props) => {
                 value={props.value}
                 onChange={(event) => props.optionChangeHandler(event, props.option)} />
             </td>
-            <td css={iconWrapperStyle()} className="option__remove">
-                <span css={removeOptionIconStyle(removeIcon)} onClick={() => props.removePollOption(props.option)}></span>
-            </td>
+            <td css={iconWrapperStyle()}><span css={removeOptionIconStyle(removeIcon)} onClick={() => props.removePollOption(props.option)}></span></td>
         </tr>
     );
 }

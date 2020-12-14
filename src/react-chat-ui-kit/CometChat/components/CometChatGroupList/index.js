@@ -53,7 +53,6 @@ class CometChatGroupList extends React.Component {
   }
 
   componentDidMount() {
-
     this.GroupListManager = new GroupListManager();
     this.getGroups();
     this.GroupListManager.attachListeners(this.groupUpdated);
@@ -71,6 +70,7 @@ class CometChatGroupList extends React.Component {
 
         this.groupListRef.scrollTop = 0;
         this.setState({ selectedGroup: {} });
+        console.log(this.state.selectedGroup);
 
       } else {
 
@@ -82,6 +82,7 @@ class CometChatGroupList extends React.Component {
 
           let groupObj = { ...grouplist[groupKey] };
           this.setState({ selectedGroup: groupObj });
+          console.log(this.state.selectedGroup);
         }
       }
     }
@@ -93,9 +94,8 @@ class CometChatGroupList extends React.Component {
       
       if(groupKey > -1) {
 
-        const groupToLeave = this.props.groupToLeave;
-        const groupObj = { ...groups[groupKey] };
-        const membersCount = parseInt(groupToLeave["membersCount"]) - 1;
+        let groupObj = { ...groups[groupKey] };
+        let membersCount = parseInt(groupObj.membersCount) - 1;
 
         let newgroupObj = Object.assign({}, groupObj, { membersCount: membersCount, hasJoined: false });
 
@@ -142,7 +142,6 @@ class CometChatGroupList extends React.Component {
   }
 
   groupUpdated = (key, message, group, options) => {
-    
     switch(key) {
       case enums.GROUP_MEMBER_SCOPE_CHANGED:
         this.updateMemberChanged(group, options);
@@ -175,8 +174,9 @@ class CometChatGroupList extends React.Component {
       if (options && this.loggedInUser.uid === options.user.uid) {
 
         let groupObj = { ...grouplist[groupKey] };
+        let membersCount = parseInt(groupObj.membersCount) - 1;
         
-        let newgroupObj = Object.assign({}, groupObj, group);
+        let newgroupObj = Object.assign({}, groupObj, { membersCount: membersCount, hasJoined: false });
         
         grouplist.splice(groupKey, 1, newgroupObj);
         this.setState({ grouplist: grouplist });
@@ -184,7 +184,7 @@ class CometChatGroupList extends React.Component {
       } else {
 
         let groupObj = { ...grouplist[groupKey] };
-        let membersCount = parseInt(group.membersCount);
+        let membersCount = parseInt(groupObj.membersCount) - 1;
 
         let newgroupObj = Object.assign({}, groupObj, { membersCount: membersCount });
 
@@ -207,17 +207,9 @@ class CometChatGroupList extends React.Component {
 
       let groupObj = { ...grouplist[groupKey] };
 
-      let membersCount = parseInt(group.membersCount);
+      let membersCount = parseInt(groupObj.membersCount) + 1;
 
-      let scope = group.hasOwnProperty("scope") ? group.scope : "";
-      let hasJoined = group.hasOwnProperty("hasJoined") ? group.hasJoined : false;
-      
-      if (options && this.loggedInUser.uid === options.user.uid) {
-        scope = CometChat.GROUP_MEMBER_SCOPE.PARTICIPANT;
-        hasJoined = true;
-      }
-
-      let newgroupObj = Object.assign({}, groupObj, { membersCount: membersCount, scope: scope, hasJoined: hasJoined });
+      let newgroupObj = Object.assign({}, groupObj, { membersCount: membersCount });
 
       grouplist.splice(groupKey, 1, newgroupObj);
       this.setState({ grouplist: grouplist });
@@ -228,8 +220,9 @@ class CometChatGroupList extends React.Component {
 
       let scope = groupObj.hasOwnProperty("scope") ? groupObj.scope : {};
       let hasJoined = groupObj.hasOwnProperty("hasJoined") ? groupObj.hasJoined : false;
-      let membersCount = parseInt(groupObj.membersCount);
+      let membersCount = parseInt(groupObj.membersCount) + 1;
       this.setAvatar(groupObj);
+      
       if (options && this.loggedInUser.uid === options.user.uid) {
         scope = CometChat.GROUP_MEMBER_SCOPE.PARTICIPANT;
         hasJoined = true;
@@ -248,18 +241,15 @@ class CometChatGroupList extends React.Component {
 
     //search for group
     let groupKey = grouplist.findIndex((g, k) => g.guid === group.guid);
-
     if (groupKey > -1) {
 
       let groupObj = { ...grouplist[groupKey] };
 
       let scope = groupObj.scope;
-      let membersCount = parseInt(group.membersCount);
-
+      let membersCount = parseInt(groupObj.membersCount) + 1;
       if (options && this.loggedInUser.uid === options.user.uid) {
         scope = CometChat.GROUP_MEMBER_SCOPE.PARTICIPANT;
       } 
-
       let newgroupObj = Object.assign({}, groupObj, { membersCount: membersCount, scope: scope });
 
       grouplist.splice(groupKey, 1, newgroupObj);
@@ -290,11 +280,10 @@ class CometChatGroupList extends React.Component {
   handleScroll = (e) => {
     const bottom =
       Math.round(e.currentTarget.scrollHeight - e.currentTarget.scrollTop) === Math.round(e.currentTarget.clientHeight);
-    if (bottom) this.getGroups();
+    // if (bottom) this.getGroups();
   }
 
   handleClick = (group) => {
-
     if(!this.props.onItemClick)
       return;
 
@@ -341,8 +330,9 @@ class CometChatGroupList extends React.Component {
       });
 
     } else {
-
+      console.log(group);
       this.setState({selectedGroup: group});
+      console.log(this.state.selectedGroup);
       this.props.onItemClick(group, 'group');
     }
   }
@@ -393,8 +383,11 @@ class CometChatGroupList extends React.Component {
         if(groupList.length === 0) {
           this.decoratorMessage = "No groups found";
         }
+        groupList.forEach(group => 
+          group = this.setAvatar(group)
+        );
 
-        groupList.forEach(group => group = this.setAvatar(group));
+        
         this.setState({ grouplist: [...this.state.grouplist, ...groupList] });
 
       }).catch(error => {
@@ -439,17 +432,16 @@ class CometChatGroupList extends React.Component {
   }
 
   render() {
-
     let messageContainer = null;
     
     if(this.state.grouplist.length === 0) {
       messageContainer = (
-        <div css={groupMsgStyle()} className="groups__decorator-message">
-          <p css={groupMsgTxtStyle(this.theme)} className="decorator-message">{this.decoratorMessage}</p>
+        <div css={groupMsgStyle()}>
+          <p css={groupMsgTxtStyle(this.theme)}>{this.decoratorMessage}</p>
         </div>
       );
     }
-
+    
     const groups = this.state.grouplist.map((group, key) => {
       return (
       <GroupView 
@@ -460,7 +452,7 @@ class CometChatGroupList extends React.Component {
       clickHandler={this.handleClick} />);
     });
 
-    let creategroup = (<div css={groupAddStyle(addIcon)} title="Create Group" onClick={() => this.createGroupHandler(true)}></div>);
+    let creategroup = (<div css={groupAddStyle(addIcon)} onClick={() => this.createGroupHandler(true)}></div>);
     if(this.props.hasOwnProperty("config") 
     && this.props.config
     && this.props.config.hasOwnProperty("group-create") 
@@ -476,29 +468,28 @@ class CometChatGroupList extends React.Component {
       creategroup = null;
     }
 
-    let closeBtn = (<div css={groupHeaderCloseStyle(navigateIcon)} className="header__close" onClick={this.handleMenuClose}></div>);
+    let closeBtn = (<div css={groupHeaderCloseStyle(navigateIcon)} onClick={this.handleMenuClose}></div>);
     if (!this.props.hasOwnProperty("enableCloseMenu") || (this.props.hasOwnProperty("enableCloseMenu") && this.props.enableCloseMenu === 0)) {
       closeBtn = null;
     }
 
     return (
-      <div css={groupWrapperStyle()} className="groups">
-        <div css={groupHeaderStyle(this.theme)} className="groups__header">
+      <div css={groupWrapperStyle()}>
+        <div css={groupHeaderStyle(this.theme)}>
           {closeBtn}
-          <h4 css={groupHeaderTitleStyle(this.props)} className="header__title">Groups</h4>
+          <h4 css={groupHeaderTitleStyle(this.props)}>Groups</h4>
           {creategroup}
         </div>
-        <div css={groupSearchStyle()} className="groups__search">
+        <div css={groupSearchStyle()}>
           <input 
           type="text" 
           autoComplete="off" 
           css={groupSearchInputStyle(this.theme, searchIcon)}
-          className="search__input" 
           placeholder="Search"
           onChange={this.searchGroup} />
         </div>
         {messageContainer}
-        <div css={groupListStyle()} className="groups__list" onScroll={this.handleScroll} ref={el => this.groupListRef = el}>{groups}</div>
+        <div css={groupListStyle()} onScroll={this.handleScroll} ref={el => this.groupListRef = el}>{groups}</div>
         <CometChatCreateGroup 
         theme={this.theme}
         open={this.state.createGroup} 
