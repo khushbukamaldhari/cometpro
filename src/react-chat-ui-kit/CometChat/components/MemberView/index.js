@@ -27,6 +27,7 @@ import doneIcon from "./resources/done.svg";
 import clearIcon from "./resources/clear.svg";
 import banIcon from "./resources/block.svg";
 import kickIcon from "./resources/delete.svg";
+import { COMETCHAT_CONSTANTS, COMETCHAT_VARS } from "../../../../consts";
 
 class MemberView extends React.Component {
 
@@ -90,7 +91,7 @@ class MemberView extends React.Component {
         const group = this.context;
 
         let editClassName = "";
-    
+        
         let name = this.props.member.name;
         let scope = (<span css={roleStyle()}>{this.roles[this.props.member.scope]}</span>);
         let changescope = null;
@@ -120,10 +121,9 @@ class MemberView extends React.Component {
             }
 
             changescope = (
-                <div css={scopeWrapperStyle()} className="scope__wrapper">
+                <div css={scopeWrapperStyle()}>
                     <select 
                     css={scopeSelectionStyle()}
-                    className="scope__select"
                     onChange={this.scopeChangeHandler}
                     defaultValue={this.props.member.scope}>{options}</select>
                     <img src={doneIcon} alt="Change Scope" onClick={this.updateMemberScope} />
@@ -187,8 +187,8 @@ class MemberView extends React.Component {
 
             editAccess = (
                 <React.Fragment>
-                    <td css={actionColumnStyle()} className="ban"><span>{ban}</span></td>
-                    <td css={actionColumnStyle()} className="kick"><span>{kick}</span></td>
+                    <td css={actionColumnStyle()}><span>{ban}</span></td>
+                    <td css={actionColumnStyle()}><span>{kick}</span></td>
                 </React.Fragment>
             );
 
@@ -198,7 +198,7 @@ class MemberView extends React.Component {
                 if (this.props.widgetsettings.main.hasOwnProperty("allow_kick_ban_members")
                 && this.props.widgetsettings.main["allow_kick_ban_members"] === false) {
     
-                    editAccess = null;
+                    editAccess = null;//(<td data-label="Change Scope" className="changescope">{changescope}</td>);
                 }
 
                 //if promote_demote_members is disabled in chatwidget
@@ -209,7 +209,7 @@ class MemberView extends React.Component {
                 }
             }
         }
-
+console.log(this.props.member.status);
         let userPresence = (
             <StatusIndicator
             widgetsettings={this.props.widgetsettings}
@@ -218,13 +218,18 @@ class MemberView extends React.Component {
             borderColor={this.props.theme.color.darkSecondary}
             borderWidth="1px" />
         );
+        if( COMETCHAT_CONSTANTS.MODE == COMETCHAT_VARS.CHAT_MODE_NBR ){
+
+        }else{
+            changescope = '';
+        }
         
         return (
             <tr css={tableRowStyle(this.props)}>
-                <td css={tableColumnStyle(editClassName)} className="userinfo"
+                <td css={tableColumnStyle(editClassName)} 
                 onMouseEnter={event => this.toggleTooltip(event, true)}
                 onMouseLeave={event => this.toggleTooltip(event, false)}>
-                    <div css={avatarStyle(editClassName)} className="thumbnail">
+                    <div css={avatarStyle(editClassName)}>
                         <Avatar 
                         image={this.props.member.avatar} 
                         cornerRadius="18px" 
@@ -232,9 +237,9 @@ class MemberView extends React.Component {
                         borderWidth="1px" />
                         {userPresence}
                     </div>
-                    <div css={nameStyle(editClassName)} className="name">{name}</div>
+                    <div css={nameStyle(editClassName)}>{name}</div>
                 </td>
-                <td css={scopeStyle()} className="scope">{changescope}</td>
+                {/* <td css={scopeStyle()}>{changescope}</td> */}
                 {editAccess}
             </tr>
         );

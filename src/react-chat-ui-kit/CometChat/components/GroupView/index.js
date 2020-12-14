@@ -1,3 +1,4 @@
+import React from "react";
 /** @jsx jsx */
 import { jsx } from '@emotion/core';
 
@@ -8,13 +9,13 @@ import {
   listItemIcon,
   itemThumbnailStyle,
   itemDetailStyle,
-  itemNameWrapperStyle,
-  itemDescStyle,
-  listItemName  
+  itemNameStyle,
+  itemDescStyle
+
 } from "./style";
 
-import shieldIcon from "./resources/shield.png";
-import lockIcon from "./resources/lock.png";
+import shieldIcon from "./resources/shield.svg";
+import lockIcon from "./resources/lock.svg";
 
 const groupview = (props) => {
 
@@ -39,31 +40,29 @@ const groupview = (props) => {
   let groupTypeIcon = null;
   if(props.group.type === "private") {
 
-    groupTypeIcon = (<img src={shieldIcon} alt="Private Group" />);
+    groupTypeIcon = (<div css={listItemIcon()}><img src={shieldIcon} alt="time" /></div>);
 
   } else if(props.group.type === "password") {
 
-    groupTypeIcon = (<img src={lockIcon} alt="Protected Group" />);
+    groupTypeIcon = (<div css={listItemIcon()}><img src={lockIcon} alt="time" /></div>);
   }
 
   return (
-    <div css={listItem(props)} className="list__item" onClick={() => props.clickHandler(props.group)}>
-      <div css={itemThumbnailStyle()} className="list__item__thumbnail">
+    <div css={listItem(props)} onClick={() => props.clickHandler(props.group)}>
+      <div css={itemThumbnailStyle()}>
         <Avatar 
         image={props.group.icon} 
         cornerRadius="18px" 
         borderColor={props.theme.color.secondary}
-        borderWidth="1px" />
+        borderWidth="1px"></Avatar>
       </div>
-      <div css={itemDetailStyle()} className="list__item__details">
-        <div css={itemNameWrapperStyle()} className="item__details__name"
+      <div css={itemDetailStyle()}>
+        <div css={itemNameStyle()}
         onMouseEnter={event => toggleTooltip(event, true)} 
-        onMouseLeave={event => toggleTooltip(event, false)}> 
-          <span css={listItemName()}>{props.group.name}</span>
-          <span css={listItemIcon()}>{groupTypeIcon}</span>
-        </div>
-        <div css={itemDescStyle(props)} className="item__details__desc">{props.group.membersCount} members</div>
+        onMouseLeave={event => toggleTooltip(event, false)}>{props.group.name}</div>
+        <div css={itemDescStyle(props)}></div>
       </div>
+      {groupTypeIcon}
     </div>
   )
 }

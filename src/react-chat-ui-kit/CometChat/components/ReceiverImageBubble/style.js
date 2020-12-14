@@ -7,25 +7,15 @@ export const messageContainerStyle = () => {
         paddingRight: "16px",
         maxWidth: "65%",
         clear: "both",
-        position: "relative",
-        display: "flex",
-        flexDirection: "column",
-        flexShrink: "0",
-        ":hover": {
-            "ul.message__actions": {
-                display: "flex"
-            }
-        }
     }
 }
 
 export const messageWrapperStyle = () => {
 
     return {
-        width: "auto",
         flex: "1 1",
-        alignSelf: "flex-start",
-        display: "flex",
+        position: "relative",
+        width: "100%",
     }
 }
 
@@ -36,16 +26,24 @@ export const messageThumbnailStyle = () => {
         height: "36px",
         margin: "10px 5px",
         float: "left",
-        flexShrink: "0",
     }
 }
 
-export const messageDetailStyle = () => {
+export const messageDetailStyle = (name) => {
+
+    const topPos = (name) ? { top: "-15px" } : { top: "-30px" };
 
     return {
         flex: "1 1",
         display: "flex",
         flexDirection: "column",
+        position: "relative",
+        ':hover': {
+            'ul:first-of-type': {
+                display: "inline-flex",
+                ...topPos
+            }
+        }
     }
 }
 
@@ -69,35 +67,14 @@ export const nameStyle = (props) => {
     }
 }
 
-export const messageImgContainerStyle = () => {
-
-    return {
-        width: "auto",
-        flex: "1 1",
-        alignSelf: "flex-start",
-        display: "flex",
-    }
-}
-
-export const messageImgWrapperStyle = (props) => {
-
-    const mq = [...props.theme.breakPoints];
+export const messageImgWrapperStyle = () => {
 
     return {
         display: "inline-block",
+        borderRadius: "12px",
         alignSelf: "flex-start",
-        maxWidth: "300px",
-        height: "200px",
-        cursor: "pointer",
-        'img': {
-            borderRadius: "8px",
-            height: "100%",
-        },
-        [`@media ${mq[0]}`]: {
-            minWidth: "50px",
-            maxWidth: "150px",
-            height: "100px",
-            padding: "2px 2px",
+        '> img': {
+            maxWidth: "250px"
         }
     }
 }

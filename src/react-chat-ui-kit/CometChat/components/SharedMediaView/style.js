@@ -1,15 +1,14 @@
 export const sectionStyle = (props) => {
 
-    const containerHeightProp = (props.containerHeight) ? {
+    const containerHeight = (props.containerHeight) ? {
         height: `calc(100% - ${props.containerHeight})`
     } : {
         height: "calc(100% - 20px)"
     };
-
     
     return {
         width: "100%",
-        ...containerHeightProp
+        ...containerHeight
     }
 }
 
@@ -108,14 +107,13 @@ export const itemStyle = (state, props, img) => {
     if (state.messagetype === "image") {
 
         itemTypeStyle = {
-            height: "120px",
-            width: "120px",
-            backgroundColor: bgColor,
+            height: "150px",
+            lineHeight: "150px",
             "> img": {
-                display: "block",
-                width: "100%",
-                height: "100%",
-                objectFit: "contain",
+                maxWidth: "100%",
+                maxHeight: "100%",
+                margin: "auto",
+                backgroundColor: bgColor,
             }
         }
         
@@ -123,8 +121,8 @@ export const itemStyle = (state, props, img) => {
 
         itemTypeStyle = {
             "> video": {
-                height: "120px",
-                width: "120px",
+                width: "160px",
+                maxHeight: "100%",
                 margin: "auto",
             }
         }

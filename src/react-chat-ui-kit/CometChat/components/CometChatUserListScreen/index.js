@@ -13,7 +13,6 @@ import CometChatUserDetail from "../CometChatUserDetail";
 import MessageThread from "../MessageThread";
 import CallAlert from "../CallAlert";
 import CallScreen from "../CallScreen";
-import ImageView from "../ImageView";
 
 import { theme } from "../../resources/theme";
 
@@ -46,8 +45,7 @@ class CometChatUserListScreen extends React.Component {
       incomingCall: null,
       outgoingCall: null,
       callmessage: {},
-      sidebarview: false,
-      imageView: null,
+      sidebarview: false
     }
 
     this.theme = Object.assign({}, theme, this.props.theme);
@@ -132,10 +130,7 @@ class CometChatUserListScreen extends React.Component {
         break;
       case "userJoinedCall":
       case "userLeftCall":
-        //this.appendCallMessage(item);
-        break;
-      case "viewActualImage":
-        this.toggleImageView(item);
+        this.appendCallMessage(item);
         break;
       default:
       break;
@@ -194,7 +189,7 @@ class CometChatUserListScreen extends React.Component {
   }
 
   videoCall = () => {
-
+    console.log(this.state.type);
     let receiverId, receiverType;
     if(this.state.type === "user") {
 
@@ -320,23 +315,18 @@ class CometChatUserListScreen extends React.Component {
     this.setState({ callmessage: call });
   }
 
-  toggleImageView = (message) => {
-    this.setState({ imageView: message });
-  }
-
   render() {
 
     let threadMessageView = null;
     if(this.state.threadmessageview) {
       threadMessageView = (
-        <div css={userScreenSecondaryStyle(this.theme)} className="contacts__secondary-view">
+        <div css={userScreenSecondaryStyle(this.theme)}>
           <MessageThread
           theme={this.theme}
           tab={this.state.tab}
           item={this.state.threadmessageitem}
           type={this.state.threadmessagetype}
           parentMessage={this.state.threadmessageparent}
-          loggedInUser={this.loggedInUser}
           actionGenerated={this.actionHandler} />
         </div>
       );
@@ -345,7 +335,7 @@ class CometChatUserListScreen extends React.Component {
     let detailScreen;
     if(this.state.viewdetailscreen) {
       detailScreen = (
-        <div css={userScreenSecondaryStyle(this.theme)} className="contacts__secondary-view">
+        <div css={userScreenSecondaryStyle(this.theme)}>
           <CometChatUserDetail
             theme={this.theme}
             item={this.state.item} 
@@ -357,24 +347,19 @@ class CometChatUserListScreen extends React.Component {
     let messageScreen = null;
     if(Object.keys(this.state.item).length) {
       messageScreen = (<CometChatMessageListScreen
-      theme={this.theme}
-      item={this.state.item} 
-      tab={this.state.tab}
-      type={this.state.type}
-      composedthreadmessage={this.state.composedthreadmessage}
-      callmessage={this.state.callmessage}
-      loggedInUser={this.loggedInUser}
-      actionGenerated={this.actionHandler} />);
-    }
-
-    let imageView = null;
-    if (this.state.imageView) {
-      imageView = (<ImageView open={true} close={() => this.toggleImageView(null)} message={this.state.imageView} />);
+        theme={this.theme}
+        item={this.state.item} 
+        tab={this.state.tab}
+        type={this.state.type}
+        composedthreadmessage={this.state.composedthreadmessage}
+        callmessage={this.state.callmessage}
+        loggedInUser={this.loggedInUser}
+        actionGenerated={this.actionHandler} />);
     }
 
     return (
-      <div css={userScreenStyle(this.theme)} className="cometchat cometchat--contacts">
-        <div css={userScreenSidebarStyle(this.state, this.theme)} className="contacts__sidebar">
+      <div css={userScreenStyle(this.theme)}>
+        <div css={userScreenSidebarStyle(this.state, this.theme)}>
           <CometChatUserList
           theme={this.theme}
           item={this.state.item}
@@ -383,7 +368,7 @@ class CometChatUserListScreen extends React.Component {
           actionGenerated={this.actionHandler}
           enableCloseMenu={Object.keys(this.state.item).length} />
         </div>
-        <div css={userScreenMainStyle(this.state)} className="contacts__main">{messageScreen}</div>
+        <div css={userScreenMainStyle(this.state)}>{messageScreen}</div>
         {detailScreen}
         {threadMessageView}
         <CallAlert
@@ -395,9 +380,7 @@ class CometChatUserListScreen extends React.Component {
         type={this.state.type}
         incomingCall={this.state.incomingCall}
         outgoingCall={this.state.outgoingCall}
-        loggedInUser={this.loggedInUser}
         actionGenerated={this.actionHandler} />
-        {imageView}
       </div>
     );
   }

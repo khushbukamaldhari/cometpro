@@ -13,18 +13,3 @@ export const chatWrapperStyle = (theme) => {
         }
     }
 }
-
-export const reactionsWrapperStyle = () => {
-
-    return {
-        position: "fixed", 
-        width: "100%", 
-        height: "100%", 
-        top: "0", 
-        right: "0",
-        zIndex: "2",
-        display: "flex",
-        justifyContent: "left",
-        alignItems: "center"
-    }
-}

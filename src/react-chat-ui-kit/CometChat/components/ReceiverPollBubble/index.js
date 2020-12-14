@@ -5,8 +5,6 @@ import { jsx } from '@emotion/core';
 
 import { CometChat } from "@cometchat-pro/chat";
 
-import ToolTip from "../ToolTip";
-import ReplyCount from "../ReplyCount";
 import Avatar from "../Avatar";
 import { SvgAvatar } from '../../util/svgavatar';
 
@@ -17,7 +15,6 @@ import {
     messageDetailStyle,
     nameWrapperStyle,
     nameStyle,
-    messageTxtContainerStyle,
     messageTxtWrapperStyle,
     pollQuestionStyle,
     pollAnswerStyle,
@@ -79,7 +76,7 @@ class ReceiverPollBubble extends React.Component {
             }
 
             avatar = (
-                <div css={messageThumbnailStyle} className="message__thumbnail">
+                <div css={messageThumbnailStyle}>
                     <Avatar
                     cornerRadius="50%"
                     borderColor={this.props.theme.color.secondary}
@@ -88,7 +85,7 @@ class ReceiverPollBubble extends React.Component {
                 </div>
             );
 
-            name = (<div css={nameWrapperStyle(avatar)} className="message__name__wrapper"><span css={nameStyle(this.props)} className="message__name">{this.props.message.sender.name}</span></div>);
+            name = (<div css={nameWrapperStyle(avatar)}><span css={nameStyle(this.props)}>{this.props.message.sender.name}</span></div>);
         }
 
         const pollOptions = [];
@@ -122,27 +119,21 @@ class ReceiverPollBubble extends React.Component {
             pollOptions.push(template);
         }
 
-        const message = Object.assign({}, this.props.message, { messageFrom: "receiver" });
-
         return (
-            <div css={messageContainerStyle()} className="receiver__message__container message__poll">
-                <ToolTip {...this.props} message={message} name={name} />    
-                <div css={messageWrapperStyle()} className="message__wrapper">
+            <div css={messageContainerStyle()}>
+                <div css={messageWrapperStyle()}>
                     {avatar}
-                    <div css={messageDetailStyle()} className="message__details">
+                    <div css={messageDetailStyle()}>
                         {name}
-                        <div css={messageTxtContainerStyle()} className="message__poll__container">
-                            <div css={messageTxtWrapperStyle(this.props)} className="message__poll__wrapper">
-                                <p css={pollQuestionStyle()} className="poll__question">{pollExtensionData.question}</p>
-                                <ul css={pollAnswerStyle(this.props)} className="poll__options">
-                                    {pollOptions}
-                                </ul>
-                                <p css={pollTotalStyle()} className="poll__votes">{totalText}</p>
-                            </div>
+                        <div css={messageTxtWrapperStyle(this.props)}>
+                            <p css={pollQuestionStyle()}>{pollExtensionData.question}</p>
+                            <ul css={pollAnswerStyle(this.props)}>
+                                {pollOptions}
+                            </ul>
+                            <p css={pollTotalStyle()}>{totalText}</p>
                         </div>
-                        <div css={messageInfoWrapperStyle()} className="message__info__wrapper">
-                            <span css={messageTimestampStyle(this.props)} className="message__timestamp">{new Date(this.props.message.sentAt * 1000).toLocaleTimeString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true })}</span>
-                            <ReplyCount {...this.props} message={message} />
+                        <div css={messageInfoWrapperStyle()}>
+                            <span css={messageTimestampStyle(this.props)}>{new Date(this.props.message.sentAt * 1000).toLocaleTimeString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true })}</span>
                         </div>
                     </div>
                 </div>

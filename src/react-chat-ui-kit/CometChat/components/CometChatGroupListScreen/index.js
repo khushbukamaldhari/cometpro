@@ -14,7 +14,6 @@ import CometChatGroupDetail from "../CometChatGroupDetail";
 import MessageThread from "../MessageThread";
 import CallAlert from "../CallAlert";
 import CallScreen from "../CallScreen";
-import ImageView from "../ImageView";
 
 import { theme } from "../../resources/theme";
 
@@ -24,6 +23,8 @@ import {
   groupScreenMainStyle,
   groupScreenSecondaryStyle
 } from "./style"
+import axios from 'axios';
+import { WP_API_CONSTANTS, WP_API_ENDPOINTS_CONSTANTS } from '../../../../consts';
 
 class CometChatGroupListScreen extends React.Component {
 
@@ -39,6 +40,7 @@ class CometChatGroupListScreen extends React.Component {
       item: {},
       type: "group",
       tab: "groups",
+      callDataApi: null,
       groupToDelete: {},
       groupToLeave: {},
       groupToUpdate: {},
@@ -50,9 +52,7 @@ class CometChatGroupListScreen extends React.Component {
       incomingCall: null,
       outgoingCall: null,
       callmessage: {},
-      sidebarview: false,
-      imageView: null,
-      groupmessage: {}
+      sidebarview: false
     }
 
     this.theme = Object.assign({}, theme, this.props.theme);
@@ -80,6 +80,7 @@ class CometChatGroupListScreen extends React.Component {
   itemClicked = (item, type) => {
     
     this.toggleSideBar();
+
     this.setState({ item: {...item}, type, viewdetailscreen: false });
   }
 
@@ -97,6 +98,9 @@ class CometChatGroupListScreen extends React.Component {
       break;
       case "videoCall":
         this.videoCall();
+      break;
+      case "joinVideoCall":
+        this.joinVideoCall(item);
       break;
       // eslint-disable-next-line no-lone-blocks
       case "menuClicked": {
@@ -148,19 +152,7 @@ class CometChatGroupListScreen extends React.Component {
         break;
       case "userJoinedCall":
       case "userLeftCall":
-        //this.appendCallMessage(item);
-        break;
-      case "viewActualImage":
-        this.toggleImageView(item);
-        break;
-      case "membersAdded":
-        this.membersAdded(item);
-        break;
-      case "memberUnbanned":
-        this.memberUnbanned(item);
-        break;
-      case "memberScopeChanged":
-        this.memberScopeChanged(item);
+        this.appendCallMessage(item);
         break;
       default:
       break;
@@ -218,7 +210,7 @@ class CometChatGroupListScreen extends React.Component {
   }
 
   videoCall = () => {
-
+    console.log(this.state.type);
     let receiverId, receiverType;
     if(this.state.type === "user") {
 
@@ -227,17 +219,59 @@ class CometChatGroupListScreen extends React.Component {
 
     } else if(this.state.type === "group") {
       receiverId = this.state.item.guid;
+      console.log("sadrfsd");
+      console.log(receiverId);
       receiverType = CometChat.RECEIVER_TYPE.GROUP;
     }
    
     CometChatManager.call(receiverId, receiverType, CometChat.CALL_TYPE.VIDEO).then(call => {
-
-      this.appendCallMessage(call);
-      this.setState({ outgoingCall: call });
-
+    
+    this.appendCallMessage(call);
+    this.setState({ outgoingCall: call });
     }).catch(error => {
       console.log("Call initialization failed with exception:", error);
     });
+
+  }
+
+  joinVideoCall = (call1) => {
+    console.log(call1);
+    
+    // axios.get(`/wp-content/plugins/nb-chat-react/callingobject.json`)
+    axios.get(`http://localhost/cometchatphpapi/callingobject.json?1=1`)
+      .then(res => {
+        const call = res.data;
+        console.log( "API CALL: ", call );
+        this.setState({ incomingCall: call });
+
+        const type = this.state.incomingCall.receiverType;
+        const id = (type === "user") ? this.state.incomingCall.sender.uid : this.state.incomingCall.receiverId;
+        console.log(call);
+        const globalStateContext = React.createContext(call);
+        CometChat.getConversation(id, type).then(conversation => {
+          console.log("join");
+          console.log(conversation.conversationWith);
+          console.log(type);
+          this.itemClicked(conversation.conversationWith, type);
+    
+        }).catch(error => {
+    
+          console.log('error while fetching a conversation', error);
+        });
+
+    //     console.log(this.state.incomingCall.call.receiverType);
+    //   const type = this.state.incomingCall.call.receiverType;
+    //   const id = (type === "group") ? this.state.incomingCall.call.sender : this.state.incomingCall.call.id;
+    // console.log("join");
+    //   CometChat.getConversation(id, type).then(conversation => {
+    //     console.log("accept");
+    //     this.itemClicked(conversation.conversationWith, type);
+
+    //   }).catch(error => {
+    //     console.log('error while fetching a conversation', error);
+    //   });
+    })
+    
 
   }
 
@@ -327,20 +361,26 @@ class CometChatGroupListScreen extends React.Component {
 
     const type = call.receiverType;
     const id = (type === "user") ? call.sender.uid : call.receiverId;
-
+    console.log(call);
     CometChat.getConversation(id, type).then(conversation => {
-
+      console.log("accept");
+      console.log(conversation.conversationWith);
+      console.log(type);
       this.itemClicked(conversation.conversationWith, type);
-
+      // axios.post(`http://localhost/cometchatphpapi/grouplist.php?dfg=sdgf`, {call})
+      //   .then(res => {
+      //     console.log( "POst call: ", call );
+      // })
     }).catch(error => {
-
       console.log('error while fetching a conversation', error);
     });
+   
+
   }
 
   callInitiated = (message) => {
 
-    this.appendCallMessage(message);
+    this.appendCallMessage(message );
   }
 
   rejectedIncomingCall = (incomingCallMessage, rejectedCallMessage) => {
@@ -380,66 +420,18 @@ class CometChatGroupListScreen extends React.Component {
     this.setState({ callmessage: call });
   }
 
-  toggleImageView = (message) => {
-    this.setState({ imageView: message });
-  }
-
-  membersAdded = (members) => {
-
-    const messageList = [];
-    members.forEach(eachMember => {
-
-      const message = `${this.loggedInUser.name} added ${eachMember.name}`;
-      const sentAt = new Date() / 1000 | 0;
-      const messageObj = { "category": "action", "message": message, "type": enums.ACTION_TYPE_GROUPMEMBER, "sentAt": sentAt };
-      messageList.push(messageObj);
-    });
-
-    this.setState({ groupmessage: messageList });
-  }
-
-  memberUnbanned = (members) => {
-
-    const messageList = [];
-    members.forEach(eachMember => {
-
-      const message = `${this.loggedInUser.name} unbanned ${eachMember.name}`;
-      const sentAt = new Date() / 1000 | 0;
-      const messageObj = { "category": "action", "message": message, "type": enums.ACTION_TYPE_GROUPMEMBER, "sentAt": sentAt };
-      messageList.push(messageObj);
-    });
-
-    this.setState({ groupmessage: messageList });
-  }
-
-  memberScopeChanged = (members) => {
-
-    const messageList = [];
-
-    members.forEach(eachMember => {
-
-      const message = `${this.loggedInUser.name} made ${eachMember.name} ${eachMember.scope}`;
-      const sentAt = new Date() / 1000 | 0;
-      const messageObj = { "category": "action", "message": message, "type": enums.ACTION_TYPE_GROUPMEMBER, "sentAt": sentAt };
-      messageList.push(messageObj);
-    });
-
-    this.setState({ groupmessage: messageList });
-  }
-
   render() {
 
     let threadMessageView = null;
     if(this.state.threadmessageview) {
       threadMessageView = (
-        <div css={groupScreenSecondaryStyle(this.theme)} className="groups__secondary-view">
+        <div css={groupScreenSecondaryStyle(this.theme)}>
           <MessageThread
           theme={this.theme}
           tab={this.state.tab}
           item={this.state.threadmessageitem}
           type={this.state.threadmessagetype}
           parentMessage={this.state.threadmessageparent}
-          loggedInUser={this.loggedInUser}
           actionGenerated={this.actionHandler} />
         </div>
       );
@@ -449,7 +441,7 @@ class CometChatGroupListScreen extends React.Component {
     if(this.state.viewdetailscreen) {
 
       detailScreen = (
-        <div css={groupScreenSecondaryStyle(this.theme)} className="groups__secondary-view">
+        <div css={groupScreenSecondaryStyle(this.theme)}>
         <CometChatGroupDetail
           theme={this.theme}
           item={this.state.item} 
@@ -470,20 +462,14 @@ class CometChatGroupListScreen extends React.Component {
         type={this.state.type}
         composedthreadmessage={this.state.composedthreadmessage}
         callmessage={this.state.callmessage}
-        groupmessage={this.state.groupmessage}
         loggedInUser={this.loggedInUser}
         actionGenerated={this.actionHandler} />
       );
     }
 
-    let imageView = null;
-    if (this.state.imageView) {
-      imageView = (<ImageView open={true} close={() => this.toggleImageView(null)} message={this.state.imageView} />);
-    }
-
     return (
-      <div css={groupScreenStyle(this.theme)} className="cometchat cometchat--groups">
-        <div css={groupScreenSidebarStyle(this.state, this.theme)} className="groups__sidebar">
+      <div css={groupScreenStyle(this.theme)}>
+        <div css={groupScreenSidebarStyle(this.state, this.theme)}>
           <CometChatGroupList
           theme={this.theme}
           item={this.state.item}
@@ -495,7 +481,7 @@ class CometChatGroupListScreen extends React.Component {
           actionGenerated={this.actionHandler}
           enableCloseMenu={Object.keys(this.state.item).length} />
         </div>
-        <div css={groupScreenMainStyle(this.state)} className="groups__main">{messageScreen}</div>
+        <div css={groupScreenMainStyle(this.state)}>{messageScreen}</div>
         {detailScreen}
         {threadMessageView}
         <CallAlert
@@ -507,9 +493,7 @@ class CometChatGroupListScreen extends React.Component {
         type={this.state.type}
         incomingCall={this.state.incomingCall}
         outgoingCall={this.state.outgoingCall}
-        loggedInUser={this.loggedInUser}
         actionGenerated={this.actionHandler} />
-        {imageView}
       </div>
     );
   }

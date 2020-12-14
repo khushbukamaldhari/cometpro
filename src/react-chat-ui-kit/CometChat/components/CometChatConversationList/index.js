@@ -9,7 +9,6 @@ import { CometChatManager } from "../../util/controller";
 import { ConversationListManager } from "./controller";
 import { SvgAvatar } from '../../util/svgavatar';
 import * as enums from '../../util/enums.js';
-import { validateWidgetSettings } from "../../util/common";
 
 import ConversationView from "../ConversationView";
 
@@ -28,6 +27,7 @@ import {
 import navigateIcon from './resources/navigate_before.svg';
 
 import { incomingOtherMessageAlert } from "../../resources/audio/";
+import { WP_API_CONSTANTS } from '../../../../consts';
 
 class CometChatConversationList extends React.Component {
 
@@ -35,9 +35,9 @@ class CometChatConversationList extends React.Component {
   decoratorMessage = "Loading...";
 
   constructor(props) {
-
+    
     super(props);
-
+    this.i = 0;
     this.state = {
       conversationlist: [],
       onItemClick: null,
@@ -45,11 +45,11 @@ class CometChatConversationList extends React.Component {
     }
     this.chatListRef = React.createRef();
     this.theme = Object.assign({}, theme, this.props.theme);
-
-    this.audio = new Audio(incomingOtherMessageAlert);
   }
 
   componentDidMount() {
+
+    this.audio = new Audio(incomingOtherMessageAlert);
 
     this.ConversationListManager = new ConversationListManager();
     this.getConversations();
@@ -91,7 +91,9 @@ class CometChatConversationList extends React.Component {
           conversationlist.splice(conversationKey, 1, newConversationObj);
           this.setState({ conversationlist: conversationlist, selectedConversation: newConversationObj });
         }
+
       }
+
     }
 
     //if user is blocked/unblocked, update conversationlist in state
@@ -134,6 +136,7 @@ class CometChatConversationList extends React.Component {
       }
     }
 
+    
     if (prevProps.messageToMarkRead !== this.props.messageToMarkRead) {
 
       const message = this.props.messageToMarkRead;
@@ -158,7 +161,8 @@ class CometChatConversationList extends React.Component {
       });
 
     }
-
+    console.log(prevProps.lastMessage);
+    console.log(this.props.lastMessage);
     if (prevProps.lastMessage !== this.props.lastMessage) {
 
       const lastMessage = this.props.lastMessage;
@@ -193,10 +197,6 @@ class CometChatConversationList extends React.Component {
       case enums.MEDIA_MESSAGE_RECEIVED:
       case enums.CUSTOM_MESSAGE_RECEIVED:
         this.updateConversation(message);
-        break;
-      case enums.MESSAGE_EDITED:
-      case enums.MESSAGE_DELETED:
-        this.conversationEditedDeleted(message);
         break;
       case enums.INCOMING_CALL_RECEIVED:
       case enums.INCOMING_CALL_CANCELLED:
@@ -239,30 +239,10 @@ class CometChatConversationList extends React.Component {
       conversationlist.splice(conversationKey, 1, newConversationObj);
       this.setState({conversationlist: conversationlist});
     }
+
   }
 
-  playAudio = (message) => {
-
-    //if audio sound is disabled in chat widget
-    if (validateWidgetSettings(this.props.widgetsettings, "enable_sound_for_messages") === false) {
-      return false;
-    }
-
-    //if it is disabled for chat wigdet in dashboard
-    // if (this.props.hasOwnProperty("widgetsettings")
-    // && this.props.widgetsettings
-    // && this.props.widgetsettings.hasOwnProperty("main")
-    // && (this.props.widgetsettings.main.hasOwnProperty("enable_sound_for_messages") === false
-    // || (this.props.widgetsettings.main.hasOwnProperty("enable_sound_for_messages")
-    // && this.props.widgetsettings.main["enable_sound_for_messages"] === false))) {
-    //   return false;
-    // }
-
-    if (message.category === enums.CATEGORY_ACTION 
-    && message.type === enums.ACTION_TYPE_GROUPMEMBER 
-    && validateWidgetSettings(this.props.widgetsettings, "hide_join_leave_notifications") === true) {
-      return false;
-    }
+  playAudio = () => {
 
     this.audio.currentTime = 0;
     this.audio.play();
@@ -322,8 +302,11 @@ class CometChatConversationList extends React.Component {
 
   makeLastMessage = (message, conversation = {}) => {
 
-    const newMessage = Object.assign({}, message);
-    return newMessage;
+    if (Object.keys(conversation).length === 0) {
+      return { ...message };
+    }
+
+    return { ...conversation.lastMessage, ...message };
   }
 
   updateConversation = (message, notification = true) => {
@@ -331,7 +314,7 @@ class CometChatConversationList extends React.Component {
     this.makeConversation(message).then(response => {
 
       const { conversationKey, conversationObj, conversationList } = response;
-      
+
       if (conversationKey > -1) {
 
         let unreadMessageCount = this.makeUnreadMessageCount(conversationObj);
@@ -343,7 +326,7 @@ class CometChatConversationList extends React.Component {
         this.setState({ conversationlist: conversationList });
 
         if (notification) {
-          this.playAudio(message);
+          this.playAudio();
         }
 
       } else {
@@ -356,32 +339,7 @@ class CometChatConversationList extends React.Component {
         this.setState({ conversationlist: conversationList });
 
         if (notification) {
-          this.playAudio(message);
-        }
-      }
-
-    }).catch(error => {
-      console.log('This is an error in converting message to conversation', error);
-    });
-
-  }
-
-  conversationEditedDeleted = (message) => {
-
-    this.makeConversation(message).then(response => {
-
-      const { conversationKey, conversationObj, conversationList } = response;
-      
-      if (conversationKey > -1) {
-
-        let lastMessageObj = conversationObj.lastMessage;
-
-        if (lastMessageObj.id === message.id) {
-
-          const newLastMessageObj = Object.assign({}, lastMessageObj, message);
-          let newConversationObj = Object.assign({}, conversationObj, { lastMessage: newLastMessageObj }); 
-          conversationList.splice(conversationKey, 1, newConversationObj);
-          this.setState({ conversationlist: conversationList });
+          this.playAudio();
         }
       }
 
@@ -410,7 +368,7 @@ class CometChatConversationList extends React.Component {
         conversationList.splice(conversationKey, 1);
         conversationList.unshift(newConversationObj);
         this.setState({ conversationlist: conversationList });
-        this.playAudio(message);
+        this.playAudio();
 
       } else {
 
@@ -430,7 +388,7 @@ class CometChatConversationList extends React.Component {
           let newConversationObj = { ...conversationObj, conversationWith: newConversationWithObj, lastMessage: lastMessageObj, unreadMessageCount: unreadMessageCount };
           conversationList.unshift(newConversationObj);
           this.setState({ conversationlist: conversationList });
-          this.playAudio(message);
+          this.playAudio();
         }
 
       }
@@ -466,7 +424,7 @@ class CometChatConversationList extends React.Component {
           conversationList.splice(conversationKey, 1);
           conversationList.unshift(newConversationObj);
           this.setState({ conversationlist: conversationList });
-          this.playAudio(message);
+          this.playAudio();
         }
       }
 
@@ -500,7 +458,7 @@ class CometChatConversationList extends React.Component {
         conversationList.splice(conversationKey, 1);
         conversationList.unshift(newConversationObj);
         this.setState({ conversationlist: conversationList });
-        this.playAudio(message);
+        this.playAudio();
 
       } 
 
@@ -532,7 +490,7 @@ class CometChatConversationList extends React.Component {
           conversationList.splice(conversationKey, 1);
           conversationList.unshift(newConversationObj);
           this.setState({ conversationlist: conversationList });
-          this.playAudio(message);
+          this.playAudio();
         }
       }
 
@@ -577,11 +535,15 @@ class CometChatConversationList extends React.Component {
         if(conversationList.length === 0) {
           this.decoratorMessage = "No chats found";
         }
-console.log(conversationList);
-        conversationList.forEach(conversation => {
 
+        conversationList.forEach(conversation => {
+          
           if(conversation.conversationType === "user" && !conversation.conversationWith.avatar) {
             conversation.conversationWith.avatar = this.setAvatar(conversation);
+            if( this.i == 0 ){
+              this.handleClick(conversation);
+              this.i = 1;
+            }  
           } else if(conversation.conversationType === "group" && !conversation.conversationWith.icon) {
             conversation.conversationWith.icon = this.setAvatar(conversation);
           }
@@ -633,44 +595,45 @@ console.log(conversationList);
   render() {
 
     const conversationList = this.state.conversationlist.map((conversation, key) => {
-      return (
-        <ConversationView 
-        key={key}
-        theme={this.theme}
-        config={this.props.config}
-        conversationKey={key} 
-        conversation={conversation}
-        selectedConversation={this.state.selectedConversation}
-        widgetsettings={this.props.widgetsettings}
-        loggedInUser={this.loggedInUser}
-        handleClick={this.handleClick} />
-      );
+      // if( conversation.conversationWith.uid.startsWith( WP_API_CONSTANTS.WP_PREFIX ) ){
+        return (
+          <ConversationView 
+          key={key}
+          theme={this.theme}
+          config={this.props.config}
+          conversationKey={key} 
+          conversation={conversation}
+          selectedConversation={this.state.selectedConversation}
+          widgetsettings={this.props.widgetsettings}
+          handleClick={this.handleClick} />
+        );
+      // }
     });
 
     let messageContainer = null;
     
     if(this.state.conversationlist.length === 0) {
       messageContainer = (
-        <div css={chatsMsgStyle()} className="chats__decorator-message">
-          <p css={chatsMsgTxtStyle(this.theme)} className="decorator-message">{this.decoratorMessage}</p>
+        <div css={chatsMsgStyle()}>
+          <p css={chatsMsgTxtStyle(this.theme)}>{this.decoratorMessage}</p>
         </div>
       );
     }
 
-    let closeBtn = (<div css={chatsHeaderCloseStyle(navigateIcon)} className="header__close" onClick={this.handleMenuClose}></div>);
+    let closeBtn = (<div css={chatsHeaderCloseStyle(navigateIcon)} onClick={this.handleMenuClose}></div>);
     if (!this.props.hasOwnProperty("enableCloseMenu") || (this.props.hasOwnProperty("enableCloseMenu") && this.props.enableCloseMenu === 0)) {
       closeBtn = null;
     }
 
     return (
-      <div css={chatsWrapperStyle()} className="chats">
-        <div css={chatsHeaderStyle(this.theme)} className="chats__header">
+      <div css={chatsWrapperStyle()}>
+        <div css={chatsHeaderStyle(this.theme)}>
           {closeBtn}
-          <h4 css={chatsHeaderTitleStyle(this.props)} className="header__title">Chats</h4>
+          <h4 css={chatsHeaderTitleStyle(this.props)}>Chats</h4>
           <div></div>
         </div>
         {messageContainer}
-        <div css={chatsListStyle()} className="chats__list" onScroll={this.handleScroll} ref={el => this.chatListRef = el}>{conversationList}</div>
+        <div css={chatsListStyle()} onScroll={this.handleScroll} ref={el => this.chatListRef = el}>{conversationList}</div>
       </div>
     );
   }

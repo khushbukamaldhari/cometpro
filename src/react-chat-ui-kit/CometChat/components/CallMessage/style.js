@@ -10,8 +10,7 @@ export const callMessageStyle = () => {
 export const callMessageTxtStyle = () => {
 
     return {
-        fontSize: "13px",
-        fontWeight: "500",
+        fontSize: "13.5px",
         margin: "0",
     }
 }

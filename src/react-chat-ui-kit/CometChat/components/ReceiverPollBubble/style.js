@@ -7,25 +7,15 @@ export const messageContainerStyle = () => {
         paddingRight: "16px",
         maxWidth: "65%",
         clear: "both",
-        position: "relative",
-        display: "flex",
-        flexDirection: "column",
-        flexShrink: "0",
-        ":hover": {
-            "ul.message__actions": {
-                display: "flex"
-            }
-        }
     }
 }
 
 export const messageWrapperStyle = () => {
 
     return {
-        width: "auto",
         flex: "1 1",
-        alignSelf: "flex-start",
-        display: "flex",
+        position: "relative",
+        width: "100%",
     }
 }
 
@@ -36,7 +26,6 @@ export const messageThumbnailStyle = () => {
         height: "36px",
         margin: "10px 5px",
         float: "left",
-        flexShrink: "0",
     }
 }
 
@@ -46,6 +35,7 @@ export const messageDetailStyle = () => {
         flex: "1 1",
         display: "flex",
         flexDirection: "column",
+        position: "relative"
     }
 }
 
@@ -66,16 +56,6 @@ export const nameStyle = (props) => {
     return {
         fontSize: "10px",
         color: `${props.theme.color.helpText}`,
-    }
-}
-
-export const messageTxtContainerStyle = () => {
-
-    return {
-        width: "auto",
-        flex: "1 1",
-        alignSelf: "flex-start",
-        display: "flex",
     }
 }
 
@@ -154,7 +134,7 @@ export const answerWrapperStyle = (props, optionData, img) => {
     let bgImg = {};
     let txtPadding = "6px 12px";
     let countPadding = txtPadding;
-    if (optionData.hasOwnProperty("voters") && optionData.voters.hasOwnProperty(props.user.uid)) {
+    if ( optionData.hasOwnProperty("voters") && optionData.voters.hasOwnProperty(props.user.uid)) {
 
         bgImg = {
             background: `url(${img}) no-repeat 10px center`,

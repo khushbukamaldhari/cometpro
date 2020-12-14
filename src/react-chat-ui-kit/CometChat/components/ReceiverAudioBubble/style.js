@@ -7,25 +7,15 @@ export const messageContainerStyle = () => {
         paddingRight: "16px",
         maxWidth: "65%",
         clear: "both",
-        position: "relative",
-        display: "flex",
-        flexDirection: "column",
-        flexShrink: "0",
-        ":hover": {
-            "ul.message__actions": {
-                display: "flex"
-            }
-        }
     }
 }
 
 export const messageWrapperStyle = () => {
 
     return {
-        width: "auto",
         flex: "1 1",
-        alignSelf: "flex-start",
-        display: "flex",
+        position: "relative",
+        width: "100%",
     }
 }
 
@@ -36,16 +26,24 @@ export const messageThumbnailStyle = () => {
         height: "36px",
         margin: "10px 5px",
         float: "left",
-        flexShrink: "0",
     }
 }
 
-export const messageDetailStyle = () => {
+export const messageDetailStyle = (name) => {
+
+    const topPos = (name) ? { top: "-15px" } : { top: "-30px" };
 
     return {
         flex: "1 1",
         display: "flex",
         flexDirection: "column",
+        position: "relative",
+        ':hover': {
+            'ul:first-of-type': {
+                display: "inline-flex",
+                ...topPos
+            }
+        }
     }
 }
 
@@ -69,26 +67,17 @@ export const nameStyle = (props) => {
     }
 }
 
-export const messageAudioContainerStyle = () => {
-
-    return {
-        width: "auto",
-        flex: "1 1",
-        alignSelf: "flex-start",
-        display: "flex",
-    }
-}
-
 export const messageAudioWrapperStyle = (props) => {
 
     return {
         display: "inline-block",
+        backgroundColor: `${props.theme.backgroundColor.secondary}`,
         borderRadius: "12px",
+        padding: "8px 12px",
         alignSelf: "flex-start",
         " > audio": {
             maxWidth: "250px",
             display: "inherit",
-            outline: "none",
         }
     }
 }

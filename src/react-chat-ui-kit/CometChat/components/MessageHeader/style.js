@@ -3,9 +3,9 @@ export const chatHeaderStyle = (props) => {
     return {
         padding: "14px 16px",
         width: "100%",
-        backgroundColor: `${props.theme.backgroundColor.white}`,
+        // backgroundColor: `${props.theme.backgroundColor.white}`,
         zIndex: "1",
-        borderBottom: `1px solid ${props.theme.borderColor.primary}`,
+        // borderBottom: `1px solid ${props.theme.borderColor.primary}`,
         display: "flex",
         flexDirection: "row",
         justifyContent: "space-between",
@@ -86,9 +86,6 @@ export const chatStatusStyle = (props, state) => {
 
     let status = {};
     if (props.type === "user") {
-
-
-
         status = {
             color: `${props.theme.color.blue}`,
             textTransform: "capitalize",
@@ -99,30 +96,12 @@ export const chatStatusStyle = (props, state) => {
                 color: `${props.theme.color.helpText}`,
                 textTransform: "capitalize",
             }
-        } 
-
-        if (state.status.includes("typing")) {
-
-            status = {
-                color: `${props.theme.color.helpText}`,
-                textTransform: "none",
-                fontStyle: "italic"
-            };
         }
-        
     } else if (props.type === "group") {
 
-        status = {
-            color: `${props.theme.color.helpText}`,
-        }
-
-        if (state.status.includes("typing")) {
-
-            status = {
-                color: `${props.theme.color.helpText}`,
-                fontStyle: "italic"
-            };
-        }
+        // status = {
+        //     color: `${props.theme.color.helpText}`,
+        // }
     }
 
     return {

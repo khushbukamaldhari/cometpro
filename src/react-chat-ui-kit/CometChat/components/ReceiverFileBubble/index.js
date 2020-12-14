@@ -1,3 +1,5 @@
+import React from "react";
+
 /** @jsx jsx */
 import { jsx } from '@emotion/core'
 
@@ -14,7 +16,6 @@ import {
   messageDetailStyle,
   nameWrapperStyle,
   nameStyle,
-  messageFileContainerStyle,
   messageFileWrapperStyle,
   messageInfoWrapperStyle,
   messageTimestampStyle
@@ -36,7 +37,7 @@ const receiverfilebubble = (props) => {
     } 
 
     avatar = (
-      <div css={messageThumbnailStyle()} className="message__thumbnail">
+      <div css={messageThumbnailStyle()}>
         <Avatar 
         cornerRadius="50%" 
         borderColor={props.theme.color.secondary}
@@ -45,27 +46,25 @@ const receiverfilebubble = (props) => {
       </div>
     );
 
-    name = (<div css={nameWrapperStyle(avatar)} className="message__name__wrapper"><span css={nameStyle(props)} className="message__name">{props.message.sender.name}</span></div>);
+    name = (<div css={nameWrapperStyle(avatar)}><span css={nameStyle(props)}>{props.message.sender.name}</span></div>);
   }
 
   const message = Object.assign({}, props.message, {messageFrom: "receiver"});
 
   return (
 
-    <div css={messageContainerStyle()} className="receiver__message__container message__file">
-      <ToolTip {...props} message={message} name={name} />    
-      <div css={messageWrapperStyle()} className="message__wrapper">
+    <div css={messageContainerStyle()}>
+      <div css={messageWrapperStyle()}>
         {avatar}
-        <div css={messageDetailStyle()} className="message__details">
+        <div css={messageDetailStyle(name)}>
           {name}
-          <div css={messageFileContainerStyle(props)} className="message__file__container">
-            <div css={messageFileWrapperStyle(props)} className="message__file__wrapper">
-              <a href={props.message.data.attachments[0].url} target="_blank" rel="noopener noreferrer">{props.message.data.attachments[0].name} <img src={blueFile} alt="file"/></a>                        
-            </div>
+          <ToolTip action="viewMessageThread" {...props} message={message} />    
+          <div css={messageFileWrapperStyle(props)}>
+            <a href={props.message.data.attachments[0].url} target="_blank" rel="noopener noreferrer">{props.message.data.attachments[0].name} <img src={blueFile} alt="file"/></a>                        
           </div>
-          <div css={messageInfoWrapperStyle()} className="message__info__wrapper">
-            <span css={messageTimestampStyle(props)} className="message__timestamp">{new Date(props.message.sentAt * 1000).toLocaleTimeString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true })}</span>
-            <ReplyCount {...props} message={message} />
+          <div css={messageInfoWrapperStyle()}>
+            <span css={messageTimestampStyle(props)}>{new Date(props.message.sentAt * 1000).toLocaleTimeString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true })}</span>
+            <ReplyCount action="viewMessageThread" {...props} message={message} />
           </div>
         </div>
       </div>

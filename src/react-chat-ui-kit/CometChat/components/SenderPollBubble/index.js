@@ -3,8 +3,8 @@ import React from "react";
 /** @jsx jsx */
 import { jsx } from '@emotion/core';
 
-import ToolTip from "../ToolTip";
-import ReplyCount from "../ReplyCount";
+import { CometChat } from "@cometchat-pro/chat";
+
 import ReadReciept from "../ReadReciept";
 
 import {
@@ -22,21 +22,6 @@ import {
 class SenderPollBubble extends React.Component {
     pollId;
     requestInProgress = null;
-
-    constructor(props) {
-        
-        super(props);
-        this.message = Object.assign({}, props.message, { messageFrom: "sender" });
-    }
-
-    componentDidMount() {
-
-        this.message = Object.assign({}, this.props.message, { messageFrom: "sender" });
-    }
-
-    componentDidUpdate() {
-        this.message = Object.assign({}, this.props.message, { messageFrom: "sender" });
-    }
 
     render() {
 
@@ -88,20 +73,18 @@ class SenderPollBubble extends React.Component {
         }
 
         return (
-            <div css={messageContainerStyle()} className="sender__message__container message__poll">
-                <ToolTip {...this.props} message={this.message} />    
-                <div css={messageWrapperStyle()} className="message__wrapper">
-                    <div css={messageTxtWrapperStyle(this.props)} className="message__poll__wrapper">
-                        <p css={pollQuestionStyle()} className="poll__question">{pollExtensionData.question}</p>
-                        <ul css={pollAnswerStyle(this.props)} className="poll__options">
+            <div css={messageContainerStyle()}>
+                <div css={messageWrapperStyle()}>
+                    <div css={messageTxtWrapperStyle(this.props)}>
+                        <p css={pollQuestionStyle()}>{pollExtensionData.question}</p>
+                        <ul css={pollAnswerStyle(this.props)}>
                             {pollOptions}
                         </ul>
-                        <p css={pollTotalStyle()} className="poll__votes">{totalText}</p>
+                        <p css={pollTotalStyle()}>{totalText}</p>
                     </div>
-                </div>
-                <div css={messageInfoWrapperStyle()} className="message__info__wrapper">
-                    <ReplyCount theme={this.props.theme} {...this.props} message={this.message} />
-                    <ReadReciept theme={this.props.theme} {...this.props} />
+                    <div css={messageInfoWrapperStyle()}>
+                        <ReadReciept theme={this.props.theme} {...this.props} />
+                    </div>
                 </div>
             </div>
         );

@@ -6,6 +6,7 @@ import { jsx } from '@emotion/core'
 import { CometChat } from "@cometchat-pro/chat";
 
 import MemberView from "../MemberView";
+import InviteView from "../InviteView";
 import Backdrop from '../Backdrop';
 
 import GroupDetailContext from '../CometChatGroupDetail/context';
@@ -22,6 +23,7 @@ import {
 } from "./style";
 
 import clearIcon from "./resources/clear.svg";
+import { COMETCHAT_CONSTANTS, COMETCHAT_VARS } from "../../../../consts";
 
 class CometChatViewMembers extends React.Component {
 
@@ -98,31 +100,69 @@ class CometChatViewMembers extends React.Component {
             console.log("updateGroupMemberScope failed with error: ", error);
         });
     }
+    
+    inviteUserPopup = () => {
+        alert("zsfsdaf");
+    }
 
     render() {
-
+        let groupMembers = '';
         const group = this.context;
-
-        const membersList = [...group.memberlist];
-
-        const groupMembers = membersList.map((member, key) => {
+        console.log(this.context);
+        let inviteMembers = '';
+        if( COMETCHAT_VARS.CHAT_MODE_NBR == COMETCHAT_CONSTANTS.MODE ){
+            const membersList = [...group.memberlist];
+            console.log(membersList);
+            groupMembers = membersList.map((member, key) => {
+                return (<MemberView 
+                    theme={this.props.theme}
+                    key={key} 
+                    member={member}
+                    item={this.props.item}
+                    widgetsettings={this.props.widgetsettings}
+                    actionGenerated={this.updateMembers} />);
+            });
+        }else{
+            const membersList = [...group.item.table_users];
+            console.log(membersList);
+            groupMembers = membersList.map((member, key) => {
+                
+                member.name = member.user_name + " " + member.last_name;
+                member.avatar = member.avatar_url;
+                return (<MemberView 
+                    theme={this.props.theme}
+                    key={key} 
+                    member={member}
+                    item={this.props.item}
+                    widgetsettings={this.props.widgetsettings}
+                    actionGenerated={this.updateMembers} />);
+            });
+        }
         
-            return (<MemberView 
-                theme={this.props.theme}
-                key={key} 
-                member={member}
-                item={this.props.item}
-                widgetsettings={this.props.widgetsettings}
-                actionGenerated={this.updateMembers} />);
-        });
+
+        inviteMembers = (
+            <InviteView 
+            theme={this.props.theme}
+            // key={key} 
+            // member={member}
+            // item={this.props.item}
+            widgetsettings={this.props.widgetsettings}
+            // actionGenerated={this.updateMembers} 
+            />
+        );
+
+        // const wrapperClassName = classNames({
+        //     "modal__viewmembers": true,
+        //     "modal--show": this.props.open
+        // });
 
         let editAccess = null;
         if(this.props.item.scope !== CometChat.GROUP_MEMBER_SCOPE.PARTICIPANT) {
 
             editAccess = (
                 <React.Fragment>
-                    <th css={actionColumnStyle()} className="ban">Ban</th>
-                    <th css={actionColumnStyle()} className="kick">Kick</th>
+                    <th css={actionColumnStyle()}>Ban</th>
+                    <th css={actionColumnStyle()}>Kick</th>
                 </React.Fragment>
             );
 
@@ -140,20 +180,24 @@ class CometChatViewMembers extends React.Component {
         return (
             <React.Fragment>
                 <Backdrop show={this.props.open} clicked={this.props.close} />
-                <div css={modalWrapperStyle(this.props)} className="modal__viewmembers">
-                    <span css={modalCloseStyle(clearIcon)} className="modal__close" onClick={this.props.close} title="Close"></span>
-                    <div css={modalBodyCtyle()} className="modal__body">
+                <div css={modalWrapperStyle(this.props)}>
+                    <span css={modalCloseStyle(clearIcon)} onClick={this.props.close} title="Close"></span>
+                    <div css={modalBodyCtyle()}>
                         <table css={modalTableStyle(this.props)}>
-                            <caption css={tableCaptionStyle()} className="modal__title">Group Members</caption>
+                            <caption css={tableCaptionStyle()}>Group Members</caption>
                             <thead> 
                                 <tr>
-                                    <th className="name">Name</th>
-                                    <th css={scopeColumnStyle()} className="scope">Scope</th>
+                                    <th>Name</th>
+                                    {/* <th css={scopeColumnStyle()}>Scope</th> */}
                                     {editAccess}
                                 </tr>
                             </thead>
                             <tbody css={tableBodyStyle()} onScroll={this.handleScroll}>{groupMembers}</tbody>
                         </table>
+                        {/* <div onClick={this.inviteUserPopup}>
+                            <caption css={tableCaptionStyle()}>Invite User</caption>
+                            {inviteMembers}
+                        </div>   */}
                     </div>
                 </div>
             </React.Fragment>

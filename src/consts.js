@@ -1,7 +1,7 @@
 
 const ccproWpData = window.ccproWpData || {}
 const ccpro_meet_and_booking = window.ccpro_meet_and_booking || {}
-const { mode, ccpro_group_id, ccpro_user_id,enable_room, wp_ccpro_api_url, wp_ccpro_prefix, wp_ccpro_user_name,wp_user_id } = ccproWpData;
+const { mode, ccpro_group_id, wp_user_role, ccpro_user_id,enable_room, wp_ccpro_api_url, wp_ccpro_prefix, wp_ccpro_user_name,wp_user_id } = ccproWpData;
 const { table_id, table_name, table_user } = ccpro_meet_and_booking;
 
 export const COMETCHAT_CONSTANTS = {
@@ -26,7 +26,8 @@ export const WP_API_CONSTANTS = {
     WP_TABLE_ID: table_id,
     WP_TABLE_NAME: table_name,
     WP_TABLE_USERS: table_user,
-    ENABLE_ROOM: enable_room
+    ENABLE_ROOM: enable_room,
+    WP_USER_ROLE: wp_user_role
 }
 
 export const WP_API_ENDPOINTS_CONSTANTS = {
